@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
 import { TimerContext } from '../components/TimerContext';  // Ajusta la ruta si es necesario
 
 const RectifierScreen = ({ route, navigation }) => {
@@ -21,8 +21,31 @@ const RectifierScreen = ({ route, navigation }) => {
       style={[
         styles.button,
         isControlButton && activeButton === command ? styles.activeButton : null,
+        (!isControlButton && activeButton !== `relay${rectifierId}on`) ? styles.disabledButton : null,
       ]}
       onPress={() => {
+        if (!isControlButton && activeButton !== `relay${rectifierId}on`) {
+          Alert.alert(
+            "Acción no permitida",
+            "El ajuste de voltaje solo está disponible en modo manual.",
+            [{ text: "OK" }]
+          );
+          return;
+        }
+        if (isControlButton && command === `relay${rectifierId}on`) {
+          if (timer === 0 || orderValue.every(digit => digit === 0)) {
+            let missingItems = [];
+            if (timer === 0) missingItems.push("tiempo");
+            if (orderValue.every(digit => digit === 0)) missingItems.push("número de orden");
+            
+            Alert.alert(
+              "Información incompleta",
+              `Falta establecer: ${missingItems.join(" y ")}`,
+              [{ text: "OK" }]
+            );
+            return;
+          }
+        }
         handleCommand(command);
         if (isControlButton) {
           setActiveButton(rectifierId, command);
@@ -273,6 +296,10 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 22,
     fontWeight: 'bold',
+  },
+  disabledButton: {
+    backgroundColor: '#cccccc',
+    opacity: 0.5,
   },
 });
 
