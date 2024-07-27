@@ -2,12 +2,12 @@ import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import RectifierScreen from '../components/RectifierScreen';
-import { TimerContext } from '../components/TimerContext';  // Ajusta la ruta si es necesario
+import { TimerContext } from '../components/TimerContext';
 
 const Stack = createStackNavigator();
 
 const HomeScreen = ({ navigation }) => {
-  const { timers, activeStates } = useContext(TimerContext);
+  const { timers, activeStates, orderNumbers } = useContext(TimerContext);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -25,8 +25,15 @@ const HomeScreen = ({ navigation }) => {
       key={rectifierId}
     >
       <Text style={styles.buttonText}>{title}</Text>
-      <View style={styles.timerContainer}>
-        <Text style={styles.timerText}>{formatTime(timers[rectifierId] || 0)}</Text>
+      <View style={styles.infoContainer}>
+        <View style={styles.timerContainer}>
+          <Text style={styles.timerText}>{formatTime(timers[rectifierId] || 0)}</Text>
+        </View>
+        <View style={styles.orderContainer}>
+          <Text style={styles.orderText}>
+            {orderNumbers[rectifierId] ? orderNumbers[rectifierId].join('') : '00'}
+          </Text>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -119,6 +126,24 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  infoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  orderContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingVertical: 2,
+    paddingHorizontal: 10,
+    borderRadius: 7,
+    marginVertical: 5,
+  },
+  orderText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    justifyContent: 'center',
   },
 });
 

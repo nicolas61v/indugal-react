@@ -4,17 +4,33 @@ import { TimerContext } from '../components/TimerContext';  // Ajusta la ruta si
 
 const RectifierScreen = ({ route, navigation }) => {
   const { rectifierId } = route.params;
-  const { timers, startTimer, stopTimer, setTimerDuration, activeStates, setActiveButton, handleCommand } = useContext(TimerContext);
+  const { 
+    timers, 
+    startTimer, 
+    stopTimer, 
+    setTimerDuration, 
+    activeStates, 
+    setActiveButton, 
+    handleCommand,
+    orderNumbers,
+    setOrderNumber
+  } = useContext(TimerContext);
 
   const timer = timers[rectifierId] || 0;
   const activeButton = activeStates[rectifierId] || null;
-  const [orderValue, setOrderValue] = useState([0, 0]);
+  const [localOrderValue, setLocalOrderValue] = useState(orderNumbers[rectifierId] || [0, 0]);
 
   useEffect(() => {
     if (activeButton === `relay${rectifierId}on`) {
       startTimer(rectifierId);
     }
   }, [timer, activeButton, rectifierId, startTimer]);
+
+  useEffect(() => {
+    if (timer === 0) {
+      setOrderNumber(rectifierId, localOrderValue);
+    }
+  }, [timer, localOrderValue, rectifierId, setOrderNumber]);
 
   const renderButton = (title, command, isControlButton) => (
     <TouchableOpacity
@@ -33,10 +49,10 @@ const RectifierScreen = ({ route, navigation }) => {
           return;
         }
         if (isControlButton && command === `relay${rectifierId}on`) {
-          if (timer === 0 || orderValue.every(digit => digit === 0)) {
+          if (timer === 0 || localOrderValue.every(digit => digit === 0)) {
             let missingItems = [];
             if (timer === 0) missingItems.push("tiempo");
-            if (orderValue.every(digit => digit === 0)) missingItems.push("número de orden");
+            if (localOrderValue.every(digit => digit === 0)) missingItems.push("número de orden");
             
             Alert.alert(
               "Información incompleta",
@@ -74,11 +90,19 @@ const RectifierScreen = ({ route, navigation }) => {
   };
 
   const adjustOrderValue = (index, adjustment) => {
-    setOrderValue(prev => {
-      const newValue = [...prev];
-      newValue[index] = (newValue[index] + adjustment + 10) % 10;
-      return newValue;
-    });
+    if (timer === 0) {
+      setLocalOrderValue(prev => {
+        const newValue = [...prev];
+        newValue[index] = (newValue[index] + adjustment + 10) % 10;
+        return newValue;
+      });
+    } else {
+      Alert.alert(
+        "Acción no permitida",
+        "El número de orden solo se puede cambiar cuando el temporizador está en 0.",
+        [{ text: "OK" }]
+      );
+    }
   };
 
   return (
@@ -105,7 +129,7 @@ const RectifierScreen = ({ route, navigation }) => {
             </TouchableOpacity>
           </View>
           <View style={styles.orderValueContainer}>
-            {orderValue.map((digit, index) => (
+            {localOrderValue.map((digit, index) => (
               <View key={index} style={styles.digitContainer}>
                 <TouchableOpacity
                   style={styles.digitButton}
@@ -300,7 +324,7 @@ const styles = StyleSheet.create({
   disabledButton: {
     backgroundColor: '#cccccc',
     opacity: 0.5,
-  },
+  },  
 });
 
 export default RectifierScreen;

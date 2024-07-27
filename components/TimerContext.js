@@ -6,11 +6,12 @@ export const TimerContext = createContext();
 export const TimerProvider = ({ children }) => {
   const [timers, setTimers] = useState({});
   const [activeStates, setActiveStates] = useState({});
+  const [orderNumbers, setOrderNumbers] = useState({});
   const intervalsRef = useRef({});
   const saveTimerTimeout = useRef(null);
 
   useEffect(() => {
-    loadTimers();
+    loadData();
     return () => {
       if (saveTimerTimeout.current) {
         clearTimeout(saveTimerTimeout.current);
@@ -19,35 +20,26 @@ export const TimerProvider = ({ children }) => {
     };
   }, []);
 
-  const loadTimers = async () => {
+  const loadData = async () => {
     try {
       const storedTimers = await AsyncStorage.getItem('timers');
       const storedStates = await AsyncStorage.getItem('activeStates');
+      const storedOrderNumbers = await AsyncStorage.getItem('orderNumbers');
       if (storedTimers) setTimers(JSON.parse(storedTimers));
       if (storedStates) setActiveStates(JSON.parse(storedStates));
+      if (storedOrderNumbers) setOrderNumbers(JSON.parse(storedOrderNumbers));
     } catch (error) {
-      console.error('Error loading timers or states:', error);
+      console.error('Error loading data:', error);
     }
   };
 
-  const saveTimers = useCallback((newTimers) => {
-    if (saveTimerTimeout.current) {
-      clearTimeout(saveTimerTimeout.current);
-    }
-    saveTimerTimeout.current = setTimeout(async () => {
-      try {
-        await AsyncStorage.setItem('timers', JSON.stringify(newTimers));
-      } catch (error) {
-        console.error('Error saving timers:', error);
-      }
-    }, 1000);
-  }, []);
-
-  const saveActiveStates = useCallback(async (newStates) => {
+  const saveData = useCallback(async (newTimers, newStates, newOrderNumbers) => {
     try {
+      await AsyncStorage.setItem('timers', JSON.stringify(newTimers));
       await AsyncStorage.setItem('activeStates', JSON.stringify(newStates));
+      await AsyncStorage.setItem('orderNumbers', JSON.stringify(newOrderNumbers));
     } catch (error) {
-      console.error('Error saving active states:', error);
+      console.error('Error saving data:', error);
     }
   }, []);
 
@@ -63,6 +55,29 @@ export const TimerProvider = ({ children }) => {
       .catch(error => {
         console.error('Error en el comando:', error);
       });
+  }, []);
+
+  const setOrderNumber = useCallback((rectifierId, orderNumber) => {
+    setOrderNumbers((prevOrderNumbers) => {
+      const updatedOrderNumbers = { ...prevOrderNumbers, [rectifierId]: orderNumber };
+      saveData(timers, activeStates, updatedOrderNumbers);
+      return updatedOrderNumbers;
+    });
+  }, [timers, activeStates, saveData]);
+
+  const resetOrderNumber = useCallback((rectifierId) => {
+    setOrderNumbers((prevOrderNumbers) => {
+      const updatedOrderNumbers = { ...prevOrderNumbers, [rectifierId]: [0, 0] };
+      saveData(timers, activeStates, updatedOrderNumbers);
+      return updatedOrderNumbers;
+    });
+  }, [timers, activeStates, saveData]);
+
+  const stopTimer = useCallback((rectifierId) => {
+    if (intervalsRef.current[rectifierId]) {
+      clearInterval(intervalsRef.current[rectifierId]);
+      delete intervalsRef.current[rectifierId];
+    }
   }, []);
 
   const startTimer = useCallback((rectifierId) => {
@@ -83,41 +98,36 @@ export const TimerProvider = ({ children }) => {
           setActiveStates((prevStates) => {
             if (prevStates[rectifierId] !== `relay${rectifierId}off`) {
               const newStates = { ...prevStates, [rectifierId]: `relay${rectifierId}off` };
-              saveActiveStates(newStates);
+              saveData(updatedTimers, newStates, orderNumbers);
               return newStates;
             }
             return prevStates;
           });
+          resetOrderNumber(rectifierId);
+        } else {
+          saveData(updatedTimers, activeStates, orderNumbers);
         }
 
-        saveTimers(updatedTimers);
         return updatedTimers;
       });
     }, 1000);
-  }, [stopTimer, handleCommand, activeStates, saveTimers, saveActiveStates]);
-
-  const stopTimer = useCallback((rectifierId) => {
-    if (intervalsRef.current[rectifierId]) {
-      clearInterval(intervalsRef.current[rectifierId]);
-      delete intervalsRef.current[rectifierId];
-    }
-  }, []);
+  }, [stopTimer, handleCommand, activeStates, orderNumbers, saveData, resetOrderNumber]);
 
   const setTimerDuration = useCallback((rectifierId, duration) => {
     setTimers((prevTimers) => {
       const updatedTimers = { ...prevTimers, [rectifierId]: duration };
-      saveTimers(updatedTimers);
+      saveData(updatedTimers, activeStates, orderNumbers);
       return updatedTimers;
     });
-  }, [saveTimers]);
+  }, [activeStates, orderNumbers, saveData]);
 
   const setActiveButton = useCallback((rectifierId, state) => {
     setActiveStates((prevStates) => {
       const newStates = { ...prevStates, [rectifierId]: state };
-      saveActiveStates(newStates);
+      saveData(timers, newStates, orderNumbers);
       return newStates;
     });
-  }, [saveActiveStates]);
+  }, [timers, orderNumbers, saveData]);
 
   const contextValue = {
     timers,
@@ -126,7 +136,10 @@ export const TimerProvider = ({ children }) => {
     setTimerDuration,
     activeStates,
     setActiveButton,
-    handleCommand
+    handleCommand,
+    orderNumbers,
+    setOrderNumber,
+    resetOrderNumber
   };
 
   return (
