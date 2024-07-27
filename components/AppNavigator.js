@@ -1,8 +1,8 @@
 import React, { useContext } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, ScrollView } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
-import RectifierScreen from './RectifierScreen';
-import { TimerContext } from './TimerContext';  // Ajusta la ruta si es necesario
+import RectifierScreen from '../components/RectifierScreen';
+import { TimerContext } from '../components/TimerContext';  // Ajusta la ruta si es necesario
 
 const Stack = createStackNavigator();
 
