@@ -41,7 +41,7 @@ export const TimerProvider = ({ children }) => {
   };
 
   const handleCommand = (command) => {
-    fetch(`http://10.10.0.56/${command}`)
+    fetch(`http://192.168.1.75/${command}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
