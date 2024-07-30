@@ -1,6 +1,7 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
-import { TimerContext } from '../components/TimerContext';  // Ajusta la ruta si es necesario
+import React, { useContext, useEffect, useState, useRef } from 'react';
+import { View, Text, TouchableOpacity, Image, Alert, Animated } from 'react-native';
+import { TimerContext } from '../components/TimerContext';
+import styles from '../styles/RectifierScreenStyles';
 
 const RectifierScreen = ({ route, navigation }) => {
   const { rectifierId } = route.params;
@@ -19,6 +20,10 @@ const RectifierScreen = ({ route, navigation }) => {
   const timer = timers[rectifierId] || 0;
   const activeButton = activeStates[rectifierId] || null;
   const [localOrderValue, setLocalOrderValue] = useState(orderNumbers[rectifierId] || [0, 0]);
+  const [isPreparing, setIsPreparing] = useState(false);
+  const [amperageCount, setAmperageCount] = useState(0);
+  const [preparationTime, setPreparationTime] = useState(120); // 2 minutes in seconds
+  const preparationProgress = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (activeButton === `relay${rectifierId}on`) {
@@ -32,23 +37,77 @@ const RectifierScreen = ({ route, navigation }) => {
     }
   }, [timer, localOrderValue, rectifierId, setOrderNumber]);
 
+  useEffect(() => {
+    let interval;
+    if (isPreparing) {
+      interval = setInterval(() => {
+        setPreparationTime((prevTime) => {
+          if (prevTime <= 1) {
+            clearInterval(interval);
+            handleInitiate();
+            return 0;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+
+      preparationProgress.setValue(1); // Reset the progress bar to full
+      Animated.timing(preparationProgress, {
+        toValue: 0, // Animate to empty over 2 minutes
+        duration: 120000, // 2 minutes
+        useNativeDriver: false,
+      }).start();
+    } else {
+      clearInterval(interval);
+      setPreparationTime(120);
+      preparationProgress.setValue(1); // Mantener la barra completa cuando no se esté preparando
+    }
+
+    return () => clearInterval(interval);
+  }, [isPreparing]);
+
+  const handleInitiate = () => {
+    setIsPreparing(false);
+    setActiveButton(rectifierId, `relay${rectifierId}on`);
+    handleCommand(`relay${rectifierId}on`);
+    setTimerDuration(rectifierId, timer);
+    startTimer(rectifierId);
+  };
+
+  const handlePrepare = () => {
+    const newPreparingState = !isPreparing;
+    setIsPreparing(newPreparingState);
+    setActiveButton(rectifierId, `relay${rectifierId}off`);
+    handleCommand(`relay${rectifierId}off`);
+    if (!newPreparingState) {
+      stopTimer(rectifierId);
+      setAmperageCount(0);
+    }
+  };
+
   const renderButton = (title, command, isControlButton) => (
     <TouchableOpacity
       style={[
         styles.button,
-        isControlButton && activeButton === command ? styles.activeButton : null,
-        (!isControlButton && activeButton !== `relay${rectifierId}on`) ? styles.disabledButton : null,
+        isControlButton && command === `relay${rectifierId}on` && activeButton === command ? styles.activeButton : null,
+        isControlButton && command === `relay${rectifierId}off` && isPreparing ? styles.preparingButton : null,
+        isControlButton && command === `relay${rectifierId}off` && !isPreparing ? styles.prepareButton : null,
+        (!isControlButton && !isPreparing) ? styles.disabledButton : null,
       ]}
       onPress={() => {
-        if (!isControlButton && activeButton !== `relay${rectifierId}on`) {
+        if (!isControlButton && !isPreparing) {
           Alert.alert(
             "Acción no permitida",
-            "El ajuste de voltaje solo está disponible en modo manual.",
+            "El ajuste de voltaje solo está disponible en modo preparación.",
             [{ text: "OK" }]
           );
           return;
         }
-        if (isControlButton && command === `relay${rectifierId}on`) {
+        if (command === `relay${rectifierId}off`) {
+          handlePrepare();
+          return;
+        }
+        if (command === `relay${rectifierId}on`) {
           if (timer === 0 || localOrderValue.every(digit => digit === 0)) {
             let missingItems = [];
             if (timer === 0) missingItems.push("tiempo");
@@ -61,20 +120,16 @@ const RectifierScreen = ({ route, navigation }) => {
             );
             return;
           }
-        }
-        handleCommand(command);
-        if (isControlButton) {
-          setActiveButton(rectifierId, command);
-          if (command === `relay${rectifierId}on`) {
-            setTimerDuration(rectifierId, timer);
-            startTimer(rectifierId);
-          } else {
-            stopTimer(rectifierId);
-          }
+          handleInitiate();
+        } else if (isPreparing && command === `R${rectifierId}UP`) {
+          setAmperageCount(prev => prev + 1);
+          handleCommand(command);
+        } else if (isPreparing && command === `R${rectifierId}DOWN`) {
+          handleCommand(command);
         }
       }}
     >
-      <Text style={styles.buttonText}>{title}</Text>
+      <Text style={styles.buttonText}>{isPreparing && command === `relay${rectifierId}off` ? 'PREPARAR' : title}</Text>
     </TouchableOpacity>
   );
 
@@ -108,7 +163,10 @@ const RectifierScreen = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       <Image source={require('../assets/indugalLogo.png')} style={styles.logo} />
-      <Text style={styles.title}>BAÑO {rectifierId}</Text>
+      <View style={styles.titleContainer}>
+        <Text style={styles.title}>BAÑO {rectifierId}</Text>
+        <Text style={styles.amperageCount}>Toques: {amperageCount}</Text>
+      </View>
       <View style={styles.contentContainer}>
         <View style={styles.controlsRow}>
           <View style={styles.timerContainer}>
@@ -150,13 +208,27 @@ const RectifierScreen = ({ route, navigation }) => {
             ))}
           </View>
         </View>
-        <View style={styles.buttonRow}>
-          {renderButton('SUBIR VOLTAJE', `R${rectifierId}UP`, false)}
-          {renderButton('BAJAR VOLTAJE', `R${rectifierId}DOWN`, false)}
+        <View style={styles.preparationBarContainer}>
+          <Animated.View 
+            style={[
+              styles.preparationBar,
+              {
+                width: preparationProgress.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['0%', '100%'],
+                }),
+              },
+            ]}
+          />
+          {isPreparing && <Text style={styles.preparationTime}>{formatTime(preparationTime)}</Text>}
         </View>
         <View style={styles.buttonRow}>
-          {renderButton('CONTROL MANUAL', `relay${rectifierId}on`, true)}
-          {renderButton('CONTROL REMOTO', `relay${rectifierId}off`, true)}
+          {renderButton('SUBIR  AMP', `R${rectifierId}UP`, false)}
+          {renderButton('BAJAR AMP', `R${rectifierId}DOWN`, false)}
+        </View>
+        <View style={styles.buttonRow}>
+          {renderButton('INICIAR', `relay${rectifierId}on`, true)}
+          {renderButton('PREPARAR', `relay${rectifierId}off`, true)}
         </View>
         <TouchableOpacity
           style={styles.backButton}
@@ -168,163 +240,5 @@ const RectifierScreen = ({ route, navigation }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    paddingTop: 10,
-  },
-  logo: {
-    width: '80%',
-    height: 100,
-    resizeMode: 'contain',
-    marginBottom: 10,
-  },
-  title: {
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontSize: 25,
-    borderWidth: 2,
-    borderRadius: 10,
-    borderColor: '#3949ab',
-    padding: 10,
-    marginBottom: 10,
-  },
-  contentContainer: {
-    flex: 1,
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-  },
-  adjustButton: {
-    backgroundColor: '#3949ab',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    marginVertical: 10,
-  },
-  adjustButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  timerBox: {
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderWidth: 2,
-    borderColor: '#3949ab',
-    borderRadius: 10,
-    marginHorizontal: 5,
-  },
-  timerText: {
-    fontSize: 25,
-    fontWeight: 'bold',
-    color: '#3949ab',
-  },
-  contentContainer: {
-    flex: 1,
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-  },
-  controlsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '80%',
-    marginBottom: 20,
-  },
-  timerContainer: {
-    flex: 1,
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#3949ab',
-    borderRadius: 10,
-    padding: 10,
-    marginRight: 10,
-  },
-  orderValueContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#3949ab',
-    borderRadius: 10,
-    padding: 10,
-    marginLeft: 10,
-  },
-  digitContainer: {
-    alignItems: 'center',
-  },
-  digitButton: {
-    backgroundColor: '#3949ab',
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 5,
-    marginVertical: 5,
-  },
-  digitButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  digitBox: {
-    paddingVertical: 2,
-    paddingHorizontal: 14,
-    borderWidth: 2,
-    borderColor: '#3949ab',
-    borderRadius: 5,
-    marginVertical: 2,
-  },
-  digitText: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#3949ab',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '80%',
-    marginVertical: 10,
-  },
-  button: {
-    backgroundColor: '#3949ab',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 30,
-    marginHorizontal: 5,
-    flex: 1,
-    alignItems: 'center',
-  },
-  buttonText: {
-    textAlign: 'center',
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: 'bold',
-  },
-  activeButton: {
-    backgroundColor: '#b71c1c',
-  },
-  backButton: {
-    marginTop: 20,
-    backgroundColor: '#3949ab',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  backButtonText: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: 'bold',
-  },
-  disabledButton: {
-    backgroundColor: '#cccccc',
-    opacity: 0.5,
-  },  
-});
 
 export default RectifierScreen;
