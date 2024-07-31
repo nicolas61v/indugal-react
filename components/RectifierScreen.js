@@ -85,6 +85,35 @@ const RectifierScreen = ({ route, navigation }) => {
     }
   };
 
+  const handleAmpChange = async (command) => {
+    if (!isPreparing) {
+      Alert.alert(
+        "Acción no permitida",
+        "El ajuste de voltaje solo está disponible en modo preparación.",
+        [{ text: "OK" }]
+      );
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://192.168.1.75/${command}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      if (data.success) {
+        if (data.action === "UP") {
+          setAmperageCount(prev => prev + 1);
+        } else if (data.action === "DOWN") {
+          setAmperageCount(prev => Math.max(0, prev - 1));
+        }
+      }
+    } catch (error) {
+      console.error('Error en el comando:', error);
+      Alert.alert("Error", "No se pudo ajustar el amperaje.");
+    }
+  };
+
   const renderButton = (title, command, isControlButton) => (
     <TouchableOpacity
       style={[
@@ -121,11 +150,8 @@ const RectifierScreen = ({ route, navigation }) => {
             return;
           }
           handleInitiate();
-        } else if (isPreparing && command === `R${rectifierId}UP`) {
-          setAmperageCount(prev => prev + 1);
-          handleCommand(command);
-        } else if (isPreparing && command === `R${rectifierId}DOWN`) {
-          handleCommand(command);
+        } else if (isPreparing && (command === `R${rectifierId}UP` || command === `R${rectifierId}DOWN`)) {
+          handleAmpChange(command);
         }
       }}
     >
