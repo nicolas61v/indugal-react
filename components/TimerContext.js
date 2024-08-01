@@ -37,7 +37,7 @@ export const TimerProvider = ({ children }) => {
                 const newCounts = { ...prevCounts };
                 const remainingTime = updatedTimers[rectifierId];
                 const currentCount = newCounts[rectifierId] || 0;
-                const totalReductionTime = Math.min(300, currentCount * 65); // 5 minutes or less if fewer touches
+                const totalReductionTime = Math.min(300, currentCount * 55); // 5 minutes or less if fewer touches
                 const reductionInterval = Math.floor(totalReductionTime / currentCount);
 
                 if (remainingTime % reductionInterval === 0 && currentCount > 0) {
