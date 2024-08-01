@@ -25,6 +25,12 @@ const styles = StyleSheet.create({
       height: '100%',
       backgroundColor: '#3949ab',
     },
+    separatorBar: {
+      height: 2,
+      backgroundColor: '#ccc',
+      width: '100%',
+      marginVertical: 10,
+    },
     preparationTime: {
       position: 'absolute',
       width: '100%',

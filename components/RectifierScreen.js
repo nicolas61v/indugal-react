@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, Image, Alert, Animated } from 'react-native';
+import React, { useContext, useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, Image, Alert } from 'react-native';
 import { TimerContext } from '../components/TimerContext';
 import styles from '../styles/RectifierScreenStyles';
 
@@ -20,10 +20,7 @@ const RectifierScreen = ({ route, navigation }) => {
   const timer = timers[rectifierId] || 0;
   const activeButton = activeStates[rectifierId] || null;
   const [localOrderValue, setLocalOrderValue] = useState(orderNumbers[rectifierId] || [0, 0]);
-  const [isPreparing, setIsPreparing] = useState(false);
   const [amperageCount, setAmperageCount] = useState(0);
-  const [preparationTime, setPreparationTime] = useState(120); // 2 minutes in seconds
-  const preparationProgress = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (activeButton === `relay${rectifierId}on`) {
@@ -37,37 +34,7 @@ const RectifierScreen = ({ route, navigation }) => {
     }
   }, [timer, localOrderValue, rectifierId, setOrderNumber]);
 
-  useEffect(() => {
-    let interval;
-    if (isPreparing) {
-      interval = setInterval(() => {
-        setPreparationTime((prevTime) => {
-          if (prevTime <= 1) {
-            clearInterval(interval);
-            handleInitiate();
-            return 0;
-          }
-          return prevTime - 1;
-        });
-      }, 1000);
-
-      preparationProgress.setValue(1); // Reset the progress bar to full
-      Animated.timing(preparationProgress, {
-        toValue: 0, // Animate to empty over 2 minutes
-        duration: 120000, // 2 minutes
-        useNativeDriver: false,
-      }).start();
-    } else {
-      clearInterval(interval);
-      setPreparationTime(120);
-      preparationProgress.setValue(1); // Mantener la barra completa cuando no se esté preparando
-    }
-
-    return () => clearInterval(interval);
-  }, [isPreparing]);
-
   const handleInitiate = () => {
-    setIsPreparing(false);
     setActiveButton(rectifierId, `relay${rectifierId}on`);
     handleCommand(`relay${rectifierId}on`);
     setTimerDuration(rectifierId, timer);
@@ -75,21 +42,17 @@ const RectifierScreen = ({ route, navigation }) => {
   };
 
   const handlePrepare = () => {
-    const newPreparingState = !isPreparing;
-    setIsPreparing(newPreparingState);
     setActiveButton(rectifierId, `relay${rectifierId}off`);
     handleCommand(`relay${rectifierId}off`);
-    if (!newPreparingState) {
-      stopTimer(rectifierId);
-      setAmperageCount(0);
-    }
+    stopTimer(rectifierId);
+    setAmperageCount(0);
   };
 
   const handleAmpChange = async (command) => {
-    if (!isPreparing) {
+    if (activeButton !== `relay${rectifierId}on`) {
       Alert.alert(
         "Acción no permitida",
-        "El ajuste de voltaje solo está disponible en modo preparación.",
+        "El ajuste de voltaje solo está disponible en modo activo.",
         [{ text: "OK" }]
       );
       return;
@@ -119,15 +82,14 @@ const RectifierScreen = ({ route, navigation }) => {
       style={[
         styles.button,
         isControlButton && command === `relay${rectifierId}on` && activeButton === command ? styles.activeButton : null,
-        isControlButton && command === `relay${rectifierId}off` && isPreparing ? styles.preparingButton : null,
-        isControlButton && command === `relay${rectifierId}off` && !isPreparing ? styles.prepareButton : null,
-        (!isControlButton && !isPreparing) ? styles.disabledButton : null,
+        isControlButton && command === `relay${rectifierId}off` ? styles.prepareButton : null,
+        (!isControlButton && activeButton !== `relay${rectifierId}on`) ? styles.disabledButton : null,
       ]}
       onPress={() => {
-        if (!isControlButton && !isPreparing) {
+        if (!isControlButton && activeButton !== `relay${rectifierId}on`) {
           Alert.alert(
             "Acción no permitida",
-            "El ajuste de voltaje solo está disponible en modo preparación.",
+            "El ajuste de voltaje solo está disponible en modo activo.",
             [{ text: "OK" }]
           );
           return;
@@ -150,12 +112,12 @@ const RectifierScreen = ({ route, navigation }) => {
             return;
           }
           handleInitiate();
-        } else if (isPreparing && (command === `R${rectifierId}UP` || command === `R${rectifierId}DOWN`)) {
+        } else if (activeButton === `relay${rectifierId}on` && (command === `R${rectifierId}UP` || command === `R${rectifierId}DOWN`)) {
           handleAmpChange(command);
         }
       }}
     >
-      <Text style={styles.buttonText}>{isPreparing && command === `relay${rectifierId}off` ? 'PREPARAR' : title}</Text>
+      <Text style={styles.buttonText}>{title}</Text>
     </TouchableOpacity>
   );
 
@@ -234,20 +196,7 @@ const RectifierScreen = ({ route, navigation }) => {
             ))}
           </View>
         </View>
-        <View style={styles.preparationBarContainer}>
-          <Animated.View 
-            style={[
-              styles.preparationBar,
-              {
-                width: preparationProgress.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: ['0%', '100%'],
-                }),
-              },
-            ]}
-          />
-          {isPreparing && <Text style={styles.preparationTime}>{formatTime(preparationTime)}</Text>}
-        </View>
+        <View style={styles.separatorBar} />
         <View style={styles.buttonRow}>
           {renderButton('SUBIR  AMP', `R${rectifierId}UP`, false)}
           {renderButton('BAJAR AMP', `R${rectifierId}DOWN`, false)}
