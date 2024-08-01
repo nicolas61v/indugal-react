@@ -10,6 +10,8 @@ export const TimerProvider = ({ children }) => {
   const [activeTimers, setActiveTimers] = useState({});
   const [amperageCounts, setAmperageCounts] = useState({});
   const saveTimerTimeout = useRef(null);
+  const retryQueue = useRef([]);
+  const isProcessingRetry = useRef(false);
 
   useEffect(() => {
     loadData();
@@ -37,12 +39,12 @@ export const TimerProvider = ({ children }) => {
                 const newCounts = { ...prevCounts };
                 const remainingTime = updatedTimers[rectifierId];
                 const currentCount = newCounts[rectifierId] || 0;
-                const totalReductionTime = Math.min(300, currentCount * 55); // 5 minutes or less if fewer touches
+                const totalReductionTime = Math.min(300, currentCount * 55);
                 const reductionInterval = Math.floor(totalReductionTime / currentCount);
 
                 if (remainingTime % reductionInterval === 0 && currentCount > 0) {
                   newCounts[rectifierId] = currentCount - 1;
-                  handleCommand(`R${rectifierId}DOWN`);
+                  handleCommandWithRetry(`R${rectifierId}DOWN`, rectifierId, true);
                 }
 
                 return newCounts;
@@ -50,7 +52,7 @@ export const TimerProvider = ({ children }) => {
             }
 
             if (updatedTimers[rectifierId] === 0) {
-              handleCommand(`relay${rectifierId}off`);
+              handleCommandWithRetry(`relay${rectifierId}off`, rectifierId, false);
               setActiveStates(prev => ({ ...prev, [rectifierId]: `relay${rectifierId}off` }));
               resetOrderNumber(rectifierId);
               setActiveTimers(prev => {
@@ -105,18 +107,37 @@ export const TimerProvider = ({ children }) => {
     }
   }, []);
 
-  const handleCommand = useCallback((command) => {
-    fetch(`http://192.168.1.75/${command}`)
-      .then(response => {
+  const handleCommandWithRetry = useCallback((command, rectifierId, isLastFiveMinutes) => {
+    const retryOperation = async (retryCount = 0) => {
+      try {
+        const response = await fetch(`http://192.168.1.75/${command}`, { timeout: 3000 });
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        return response.text();
-      })
-      .then(data => console.log(data))
-      .catch(error => {
-        console.error('Error en el comando:', error);
-      });
+        const data = await response.text();
+        console.log(`Command ${command} executed successfully:`, data);
+      } catch (error) {
+        console.error(`Error executing command ${command}:`, error);
+        if (isLastFiveMinutes && retryCount < 2) {
+          console.log(`Retrying command ${command}. Attempt ${retryCount + 1}`);
+          retryQueue.current.push(() => retryOperation(retryCount + 1));
+          processRetryQueue();
+        }
+      }
+    };
+
+    retryOperation();
+  }, []);
+
+  const processRetryQueue = useCallback(() => {
+    if (isProcessingRetry.current || retryQueue.current.length === 0) return;
+
+    isProcessingRetry.current = true;
+    const nextRetry = retryQueue.current.shift();
+    nextRetry().finally(() => {
+      isProcessingRetry.current = false;
+      processRetryQueue();
+    });
   }, []);
 
   const setOrderNumber = useCallback((rectifierId, orderNumber) => {
@@ -178,7 +199,7 @@ export const TimerProvider = ({ children }) => {
     setTimerDuration,
     activeStates,
     setActiveButton,
-    handleCommand,
+    handleCommandWithRetry,
     orderNumbers,
     setOrderNumber,
     resetOrderNumber,

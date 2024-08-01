@@ -12,7 +12,7 @@ const RectifierScreen = ({ route, navigation }) => {
     setTimerDuration, 
     activeStates, 
     setActiveButton, 
-    handleCommand,
+    handleCommandWithRetry,
     orderNumbers,
     setOrderNumber,
     amperageCounts,
@@ -38,14 +38,14 @@ const RectifierScreen = ({ route, navigation }) => {
 
   const handleInitiate = () => {
     setActiveButton(rectifierId, `relay${rectifierId}on`);
-    handleCommand(`relay${rectifierId}on`);
+    handleCommandWithRetry(`relay${rectifierId}on`, rectifierId, false);
     setTimerDuration(rectifierId, timer);
     startTimer(rectifierId);
   };
 
   const handlePrepare = () => {
     setActiveButton(rectifierId, `relay${rectifierId}off`);
-    handleCommand(`relay${rectifierId}off`);
+    handleCommandWithRetry(`relay${rectifierId}off`, rectifierId, false);
     stopTimer(rectifierId);
     updateAmperageCount(rectifierId, 0);
   };
