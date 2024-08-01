@@ -14,13 +14,15 @@ const RectifierScreen = ({ route, navigation }) => {
     setActiveButton, 
     handleCommand,
     orderNumbers,
-    setOrderNumber
+    setOrderNumber,
+    amperageCounts,
+    updateAmperageCount
   } = useContext(TimerContext);
 
   const timer = timers[rectifierId] || 0;
   const activeButton = activeStates[rectifierId] || null;
   const [localOrderValue, setLocalOrderValue] = useState(orderNumbers[rectifierId] || [0, 0]);
-  const [amperageCount, setAmperageCount] = useState(0);
+  const amperageCount = amperageCounts[rectifierId] || 0;
 
   useEffect(() => {
     if (activeButton === `relay${rectifierId}on`) {
@@ -45,7 +47,7 @@ const RectifierScreen = ({ route, navigation }) => {
     setActiveButton(rectifierId, `relay${rectifierId}off`);
     handleCommand(`relay${rectifierId}off`);
     stopTimer(rectifierId);
-    setAmperageCount(0);
+    updateAmperageCount(rectifierId, 0);
   };
 
   const handleAmpChange = async (command) => {
@@ -66,9 +68,9 @@ const RectifierScreen = ({ route, navigation }) => {
       const data = await response.json();
       if (data.success) {
         if (data.action === "UP") {
-          setAmperageCount(prev => prev + 1);
+          updateAmperageCount(rectifierId, amperageCount + 1);
         } else if (data.action === "DOWN") {
-          setAmperageCount(prev => Math.max(0, prev - 1));
+          updateAmperageCount(rectifierId, Math.max(0, amperageCount - 1));
         }
       }
     } catch (error) {
