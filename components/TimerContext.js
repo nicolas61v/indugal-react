@@ -38,15 +38,39 @@ export const TimerProvider = ({ children }) => {
               setAmperageCounts(prevCounts => {
                 const newCounts = { ...prevCounts };
                 const remainingTime = updatedTimers[rectifierId];
-                const currentCount = newCounts[rectifierId] || 0;
-                const totalReductionTime = Math.min(300, currentCount * 62);
-                const reductionInterval = Math.floor(totalReductionTime / currentCount);
-
-                if (remainingTime % reductionInterval === 0 && currentCount > 0) {
-                  newCounts[rectifierId] = currentCount - 1;
-                  handleCommandWithRetry(`R${rectifierId}DOWN`, rectifierId, true);
+                const initialCount = newCounts[rectifierId] || 0;
+                const currentCount = newCounts[rectifierId];
+                const totalTime = 300; // 5 minutes in seconds
+                const bufferTime = 20; // seconds to finish before the end
+                const effectiveTime = totalTime - bufferTime;
+                
+                if (currentCount > 0) {
+                  // Calculate the time interval for each reduction
+                  const interval = Math.floor(effectiveTime / initialCount);
+                  
+                  // Calculate how many reductions should have occurred by now
+                  const elapsedTime = totalTime - remainingTime;
+                  const expectedReductions = Math.min(
+                    initialCount - 1, // Ensure we don't reduce below 1
+                    Math.floor(elapsedTime / interval)
+                  );
+                  
+                  // Calculate how many reductions have actually occurred
+                  const actualReductions = initialCount - currentCount;
+                  
+                  // If we're behind on reductions, perform one now
+                  if (expectedReductions > actualReductions) {
+                    newCounts[rectifierId] = currentCount - 1;
+                    handleCommandWithRetry(`R${rectifierId}DOWN`, rectifierId, true);
+                  }
+                  
+                  // If it's the last reduction and we haven't done it yet, do it now
+                  if (currentCount === 1 && remainingTime <= bufferTime) {
+                    newCounts[rectifierId] = 0;
+                    handleCommandWithRetry(`R${rectifierId}DOWN`, rectifierId, true);
+                  }
                 }
-
+            
                 return newCounts;
               });
             }
@@ -120,7 +144,7 @@ export const TimerProvider = ({ children }) => {
         console.error(`Error executing command ${command}:`, error);
         if (isLastFiveMinutes && retryCount < 2) {
           console.log(`Retrying command ${command}. Attempt ${retryCount + 1}`);
-          retryQueue.current.push(() => retryOperation(retryCount + 1));
+          retryQueue.current.push(() => retryOperation(retryCount + 1));;
           processRetryQueue();
         }
       }
