@@ -39,7 +39,7 @@ export const TimerProvider = ({ children }) => {
                 const newCounts = { ...prevCounts };
                 const remainingTime = updatedTimers[rectifierId];
                 const currentCount = newCounts[rectifierId] || 0;
-                const totalReductionTime = Math.min(300, currentCount * 55);
+                const totalReductionTime = Math.min(300, currentCount * 62);
                 const reductionInterval = Math.floor(totalReductionTime / currentCount);
 
                 if (remainingTime % reductionInterval === 0 && currentCount > 0) {
@@ -110,7 +110,7 @@ export const TimerProvider = ({ children }) => {
   const handleCommandWithRetry = useCallback((command, rectifierId, isLastFiveMinutes) => {
     const retryOperation = async (retryCount = 0) => {
       try {
-        const response = await fetch(`http://192.168.1.75/${command}`, { timeout: 3000 });
+        const response = await fetch(`http://192.168.0.100/${command}`, { timeout: 3000 });
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
