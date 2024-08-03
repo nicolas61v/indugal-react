@@ -185,8 +185,11 @@ const styles = StyleSheet.create({
     prepareButton: {
       backgroundColor: '#3949ab',
     },
-    preparingButton: {
-      backgroundColor: '#b71c1c',
+    activeButton: {
+      backgroundColor: 'green',
+    },
+    pauseButton: {
+      backgroundColor: '#3949ab',
     },
   });
 

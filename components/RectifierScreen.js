@@ -43,6 +43,13 @@ const RectifierScreen = ({ route, navigation }) => {
     startTimer(rectifierId);
   };
 
+  const handlePause = () => {
+    setActiveButton(rectifierId, `relay${rectifierId}off`);
+    handleCommandWithRetry(`relay${rectifierId}off`, rectifierId, false);
+    stopTimer(rectifierId);
+    // No reiniciamos el amperageCount aquí
+  };
+
   const handlePrepare = () => {
     setActiveButton(rectifierId, `relay${rectifierId}off`);
     handleCommandWithRetry(`relay${rectifierId}off`, rectifierId, false);
@@ -84,7 +91,10 @@ const RectifierScreen = ({ route, navigation }) => {
       style={[
         styles.button,
         isControlButton && command === `relay${rectifierId}on` && activeButton === command ? styles.activeButton : null,
+        isControlButton && command === `relay${rectifierId}off` && activeButton === command ? styles.activeButton : null,
+        isControlButton && command === 'pause' && activeButton === command ? styles.activeButton : null,
         isControlButton && command === `relay${rectifierId}off` ? styles.prepareButton : null,
+        isControlButton && command === 'pause' ? styles.pauseButton : null,
         (!isControlButton && activeButton !== `relay${rectifierId}on`) ? styles.disabledButton : null,
       ]}
       onPress={() => {
@@ -98,6 +108,10 @@ const RectifierScreen = ({ route, navigation }) => {
         }
         if (command === `relay${rectifierId}off`) {
           handlePrepare();
+          return;
+        }
+        if (command === 'pause') {
+          handlePause();
           return;
         }
         if (command === `relay${rectifierId}on`) {
@@ -205,7 +219,8 @@ const RectifierScreen = ({ route, navigation }) => {
         </View>
         <View style={styles.buttonRow}>
           {renderButton('INICIAR', `relay${rectifierId}on`, true)}
-          {renderButton('PREPARAR', `relay${rectifierId}off`, true)}
+          {renderButton('PAUSAR', 'pause', true)}
+          {renderButton('DETENER', `relay${rectifierId}off`, true)}
         </View>
         <TouchableOpacity
           style={styles.backButton}
