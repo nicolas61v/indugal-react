@@ -44,12 +44,11 @@ const RectifierScreen = ({ route, navigation }) => {
   };
 
   const handlePause = () => {
-    setActiveButton(rectifierId, `relay${rectifierId}off`);
+    setActiveButton(rectifierId, 'pause');  // Cambiado de `relay${rectifierId}off` a 'pause'
     handleCommandWithRetry(`relay${rectifierId}off`, rectifierId, false);
     stopTimer(rectifierId);
-    // No reiniciamos el amperageCount aquí
   };
-
+  
   const handlePrepare = () => {
     setActiveButton(rectifierId, `relay${rectifierId}off`);
     handleCommandWithRetry(`relay${rectifierId}off`, rectifierId, false);
@@ -86,56 +85,58 @@ const RectifierScreen = ({ route, navigation }) => {
     }
   };
 
-  const renderButton = (title, command, isControlButton) => (
-    <TouchableOpacity
-      style={[
-        styles.button,
-        isControlButton && command === `relay${rectifierId}on` && activeButton === command ? styles.activeButton : null,
-        isControlButton && command === `relay${rectifierId}off` && activeButton === command ? styles.activeButton : null,
-        isControlButton && command === 'pause' && activeButton === command ? styles.activeButton : null,
-        isControlButton && command === `relay${rectifierId}off` ? styles.prepareButton : null,
-        isControlButton && command === 'pause' ? styles.pauseButton : null,
-        (!isControlButton && activeButton !== `relay${rectifierId}on`) ? styles.disabledButton : null,
-      ]}
-      onPress={() => {
-        if (!isControlButton && activeButton !== `relay${rectifierId}on`) {
+const renderButton = (title, command, isControlButton) => (
+  <TouchableOpacity
+    style={[
+      styles.button,
+      isControlButton && (
+        (command === `relay${rectifierId}on` && activeButton === `relay${rectifierId}on`) ||
+        (command === 'pause' && activeButton === 'pause') ||
+        (command === `relay${rectifierId}off` && activeButton === `relay${rectifierId}off`)
+      ) ? styles.activeButton : null,
+      command === `relay${rectifierId}off` ? styles.prepareButton : null,
+      command === 'pause' ? styles.pauseButton : null,
+      (!isControlButton && activeButton !== `relay${rectifierId}on`) ? styles.disabledButton : null,
+    ]}
+    onPress={() => {
+      if (!isControlButton && activeButton !== `relay${rectifierId}on`) {
+        Alert.alert(
+          "Acción no permitida",
+          "El ajuste de voltaje solo está disponible en modo activo.",
+          [{ text: "OK" }]
+        );
+        return;
+      }
+      if (command === `relay${rectifierId}off`) {
+        handlePrepare();
+        return;
+      }
+      if (command === 'pause') {
+        handlePause();
+        return;
+      }
+      if (command === `relay${rectifierId}on`) {
+        if (timer === 0 || localOrderValue.every(digit => digit === 0)) {
+          let missingItems = [];
+          if (timer === 0) missingItems.push("tiempo");
+          if (localOrderValue.every(digit => digit === 0)) missingItems.push("número de orden");
+          
           Alert.alert(
-            "Acción no permitida",
-            "El ajuste de voltaje solo está disponible en modo activo.",
+            "Información incompleta",
+            `Falta establecer: ${missingItems.join(" y ")}`,
             [{ text: "OK" }]
           );
           return;
         }
-        if (command === `relay${rectifierId}off`) {
-          handlePrepare();
-          return;
-        }
-        if (command === 'pause') {
-          handlePause();
-          return;
-        }
-        if (command === `relay${rectifierId}on`) {
-          if (timer === 0 || localOrderValue.every(digit => digit === 0)) {
-            let missingItems = [];
-            if (timer === 0) missingItems.push("tiempo");
-            if (localOrderValue.every(digit => digit === 0)) missingItems.push("número de orden");
-            
-            Alert.alert(
-              "Información incompleta",
-              `Falta establecer: ${missingItems.join(" y ")}`,
-              [{ text: "OK" }]
-            );
-            return;
-          }
-          handleInitiate();
-        } else if (activeButton === `relay${rectifierId}on` && (command === `R${rectifierId}UP` || command === `R${rectifierId}DOWN`)) {
-          handleAmpChange(command);
-        }
-      }}
-    >
-      <Text style={styles.buttonText}>{title}</Text>
-    </TouchableOpacity>
-  );
+        handleInitiate();
+      } else if (activeButton === `relay${rectifierId}on` && (command === `R${rectifierId}UP` || command === `R${rectifierId}DOWN`)) {
+        handleAmpChange(command);
+      }
+    }}
+  >
+    <Text style={styles.buttonText}>{title}</Text>
+  </TouchableOpacity>
+);
 
   const adjustTimer = (adjustment) => {
     const newTime = Math.max(timer + adjustment * 60, 0);
@@ -214,8 +215,8 @@ const RectifierScreen = ({ route, navigation }) => {
         </View>
         <View style={styles.separatorBar} />
         <View style={styles.buttonRow}>
-          {renderButton('SUBIR  AMP', `R${rectifierId}UP`, false)}
-          {renderButton('BAJAR AMP', `R${rectifierId}DOWN`, false)}
+          {renderButton('▼', `R${rectifierId}DOWN`, false)}
+          {renderButton('▲', `R${rectifierId}UP`, false)}
         </View>
         <View style={styles.buttonRow}>
           {renderButton('INICIAR', `relay${rectifierId}on`, true)}
