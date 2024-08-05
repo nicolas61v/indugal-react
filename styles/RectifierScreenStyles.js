@@ -163,9 +163,6 @@ const styles = StyleSheet.create({
       fontSize: 20,
       fontWeight: 'bold',
     },
-    activeButton: {
-      backgroundColor: '#b71c1c',
-    },
     backButton: {
       marginTop: 20,
       backgroundColor: '#3949ab',

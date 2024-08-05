@@ -49,9 +49,9 @@ const HomeScreen = ({ navigation }) => {
           {renderButton('BAÑO 3', 3)}
         </ScrollView>
         <ScrollView contentContainerStyle={styles.buttonColumn}>
-          {renderButton('BAÑO 4', 4)}
-          {renderButton('BAÑO 5', 5)}
           {renderButton('BAÑO 6', 6)}
+          {renderButton('BAÑO 5', 5)}
+          {renderButton('BAÑO 4', 4)}
         </ScrollView>
       </View>
     </View>
