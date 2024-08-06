@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
       marginBottom: 10,
     },
     topRectangle: {
-      height: windowHeight * 0.17,
+      height: windowHeight * 0.20,
       width: '100%',
       backgroundColor: '#e0e0e0', // Un gris claro, puedes cambiarlo al color que prefieras
     },
@@ -113,8 +113,8 @@ const styles = StyleSheet.create({
     orderValueContainer: {
       flex: 1,
       flexDirection: 'row',
-      justifyContent: 'space-around',
       alignItems: 'center',
+      justifyContent: 'center',
       borderWidth: 2,
       borderColor: '#3949ab',
       borderRadius: 10,
