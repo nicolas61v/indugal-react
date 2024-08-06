@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
       marginBottom: 10,
     },
     topRectangle: {
-      height: windowHeight * 0.20,
+      height: windowHeight * 0.25,
       width: '100%',
       backgroundColor: '#e0e0e0', // Un gris claro, puedes cambiarlo al color que prefieras
     },
