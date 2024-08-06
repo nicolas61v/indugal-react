@@ -160,7 +160,8 @@ const RectifierScreen = ({ route, navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+<View style={styles.container}>
+      <View style={styles.topRectangle} />
       <Image source={require('../assets/indugalLogo.png')} style={styles.logo} />
       <View style={styles.titleContainer}>
         <Text style={styles.title}>BAÑO {rectifierId}</Text>

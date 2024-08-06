@@ -1,4 +1,6 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const windowHeight = Dimensions.get('window').height;
 
 const styles = StyleSheet.create({
     titleContainer: {
@@ -7,6 +9,11 @@ const styles = StyleSheet.create({
       justifyContent: 'space-between',
       width: '80%',
       marginBottom: 10,
+    },
+    topRectangle: {
+      height: windowHeight * 0.17,
+      width: '100%',
+      backgroundColor: '#e0e0e0', // Un gris claro, puedes cambiarlo al color que prefieras
     },
     amperageCount: {
       fontSize: 18,
