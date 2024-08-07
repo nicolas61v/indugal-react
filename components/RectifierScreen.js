@@ -67,7 +67,7 @@ const RectifierScreen = ({ route, navigation }) => {
     }
 
     try {
-      const response = await fetch(`http://192.168.1.184/${command}`);
+      const response = await fetch(`http://10.10.0.251/${command}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }

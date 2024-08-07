@@ -134,7 +134,7 @@ export const TimerProvider = ({ children }) => {
   const handleCommandWithRetry = useCallback((command, rectifierId, isLastFiveMinutes) => {
     const retryOperation = async (retryCount = 0) => {
       try {
-        const response = await fetch(`http://192.168.1.184/${command}`, { timeout: 3000 });
+        const response = await fetch(`http://10.10.0.251/${command}`, { timeout: 3000 });
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
