@@ -9,6 +9,7 @@ export const TimerProvider = ({ children }) => {
   const [orderNumbers, setOrderNumbers] = useState({});
   const [activeTimers, setActiveTimers] = useState({});
   const [amperageCounts, setAmperageCounts] = useState({});
+  const [amperageReductionSchedule, setAmperageReductionSchedule] = useState({});
   const saveTimerTimeout = useRef(null);
   const retryQueue = useRef([]);
   const isProcessingRetry = useRef(false);
@@ -33,46 +34,9 @@ export const TimerProvider = ({ children }) => {
             updatedTimers[rectifierId]--;
             hasChanges = true;
 
-            // Reduce amperage counts in the last 5 minutes
-            if (updatedTimers[rectifierId] <= 300 && updatedTimers[rectifierId] > 0) {
-              setAmperageCounts(prevCounts => {
-                const newCounts = { ...prevCounts };
-                const remainingTime = updatedTimers[rectifierId];
-                const initialCount = newCounts[rectifierId] || 0;
-                const currentCount = newCounts[rectifierId];
-                const totalTime = 300; // 5 minutes in seconds
-                const bufferTime = 20; // seconds to finish before the end
-                const effectiveTime = totalTime - bufferTime;
-                
-                if (currentCount > 0) {
-                  // Calculate the time interval for each reduction
-                  const interval = Math.floor(effectiveTime / initialCount);
-                  
-                  // Calculate how many reductions should have occurred by now
-                  const elapsedTime = totalTime - remainingTime;
-                  const expectedReductions = Math.min(
-                    initialCount - 1, // Ensure we don't reduce below 1
-                    Math.floor(elapsedTime / interval)
-                  );
-                  
-                  // Calculate how many reductions have actually occurred
-                  const actualReductions = initialCount - currentCount;
-                  
-                  // If we're behind on reductions, perform one now
-                  if (expectedReductions > actualReductions) {
-                    newCounts[rectifierId] = currentCount - 1;
-                    handleCommandWithRetry(`R${rectifierId}DOWN`, rectifierId, true);
-                  }
-                  
-                  // If it's the last reduction and we haven't done it yet, do it now
-                  if (currentCount === 1 && remainingTime <= bufferTime) {
-                    newCounts[rectifierId] = 0;
-                    handleCommandWithRetry(`R${rectifierId}DOWN`, rectifierId, true);
-                  }
-                }
-            
-                return newCounts;
-              });
+            // Check if we need to start or continue amperage reduction
+            if (updatedTimers[rectifierId] <= 420 && updatedTimers[rectifierId] > 0) {
+              handleAmperageReduction(rectifierId, updatedTimers[rectifierId]);
             }
 
             if (updatedTimers[rectifierId] === 0) {
@@ -89,6 +53,11 @@ export const TimerProvider = ({ children }) => {
                 delete newCounts[rectifierId];
                 return newCounts;
               });
+              setAmperageReductionSchedule(prev => {
+                const newSchedule = { ...prev };
+                delete newSchedule[rectifierId];
+                return newSchedule;
+              });
             }
           }
         });
@@ -103,7 +72,33 @@ export const TimerProvider = ({ children }) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [activeTimers, amperageCounts]);
+  }, [activeTimers, amperageCounts, amperageReductionSchedule]);
+
+  const handleAmperageReduction = (rectifierId, remainingTime) => {
+    const currentCount = amperageCounts[rectifierId] || 0;
+    const schedule = amperageReductionSchedule[rectifierId];
+
+    if (!schedule) {
+      // Initialize the reduction schedule
+      const newSchedule = [];
+      for (let i = 0; i < currentCount; i++) {
+        const reductionTime = Math.floor(300 / currentCount * i);
+        newSchedule.push(300 - reductionTime);
+      }
+      setAmperageReductionSchedule(prev => ({ ...prev, [rectifierId]: newSchedule }));
+    } else if (schedule.length > 0 && remainingTime <= schedule[0]) {
+      // Time to reduce amperage
+      setAmperageCounts(prev => ({
+        ...prev,
+        [rectifierId]: Math.max(0, prev[rectifierId] - 1)
+      }));
+      handleCommandWithRetry(`R${rectifierId}DOWN`, rectifierId, true);
+      setAmperageReductionSchedule(prev => ({
+        ...prev,
+        [rectifierId]: prev[rectifierId].slice(1)
+      }));
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -131,10 +126,10 @@ export const TimerProvider = ({ children }) => {
     }
   }, []);
 
-  const handleCommandWithRetry = useCallback((command, rectifierId, isLastFiveMinutes) => {
+  const handleCommandWithRetry = useCallback((command, rectifierId, isLastSevenMinutes) => {
     const retryOperation = async (retryCount = 0) => {
       try {
-        const response = await fetch(`http://10.10.0.251/${command}`, { timeout: 3000 });
+        const response = await fetch(`http://10.10.0.31/${command}`, { timeout: 3000 });
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
@@ -142,9 +137,9 @@ export const TimerProvider = ({ children }) => {
         console.log(`Command ${command} executed successfully:`, data);
       } catch (error) {
         console.error(`Error executing command ${command}:`, error);
-        if (isLastFiveMinutes && retryCount < 2) {
+        if (isLastSevenMinutes && retryCount < 2) {
           console.log(`Retrying command ${command}. Attempt ${retryCount + 1}`);
-          retryQueue.current.push(() => retryOperation(retryCount + 1));;
+          retryQueue.current.push(() => retryOperation(retryCount + 1));
           processRetryQueue();
         }
       }
@@ -213,6 +208,12 @@ export const TimerProvider = ({ children }) => {
       const newCounts = { ...prevCounts, [rectifierId]: count };
       saveData(timers, activeStates, orderNumbers, newCounts);
       return newCounts;
+    });
+    // Reset the amperage reduction schedule when the count is updated
+    setAmperageReductionSchedule(prev => {
+      const newSchedule = { ...prev };
+      delete newSchedule[rectifierId];
+      return newSchedule;
     });
   }, [timers, activeStates, orderNumbers, saveData]);
 

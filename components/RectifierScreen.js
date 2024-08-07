@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 import { View, Text, TouchableOpacity, Image, Alert } from 'react-native';
 import { TimerContext } from '../components/TimerContext';
 import styles from '../styles/RectifierScreenStyles';
@@ -23,6 +23,7 @@ const RectifierScreen = ({ route, navigation }) => {
   const activeButton = activeStates[rectifierId] || null;
   const [localOrderValue, setLocalOrderValue] = useState(orderNumbers[rectifierId] || [0, 0]);
   const amperageCount = amperageCounts[rectifierId] || 0;
+  const lastAmpChangeTime = useRef(0);
 
   useEffect(() => {
     if (activeButton === `relay${rectifierId}on`) {
@@ -66,8 +67,14 @@ const RectifierScreen = ({ route, navigation }) => {
       return;
     }
 
+    const now = Date.now();
+    if (now - lastAmpChangeTime.current < 500) {
+      return; // Ignore if less than 0.3 seconds have passed
+    }
+    lastAmpChangeTime.current = now;
+
     try {
-      const response = await fetch(`http://10.10.0.251/${command}`);
+      const response = await fetch(`http://10.10.0.31/${command}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
@@ -160,7 +167,7 @@ const RectifierScreen = ({ route, navigation }) => {
   };
 
   return (
-<View style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.topRectangle} />
       <Image source={require('../assets/indugalLogo.png')} style={styles.logo} />
       <View style={styles.titleContainer}>
@@ -169,23 +176,6 @@ const RectifierScreen = ({ route, navigation }) => {
       </View>
       <View style={styles.contentContainer}>
         <View style={styles.controlsRow}>
-          <View style={styles.timerContainer}>
-            <TouchableOpacity
-              style={styles.adjustButton}
-              onPress={() => adjustTimer(5)}
-            >
-              <Text style={styles.adjustButtonText}>+5 Min</Text>
-            </TouchableOpacity>
-            <View style={styles.timerBox}>
-              <Text style={styles.timerText}>{formatTime(timer)}</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.adjustButton}
-              onPress={() => adjustTimer(-5)}
-            >
-              <Text style={styles.adjustButtonText}>-5 Min</Text>
-            </TouchableOpacity>
-          </View>
           <View style={styles.orderValueContainer}>
             {localOrderValue.map((digit, index) => (
               <View key={index} style={styles.digitContainer}>
@@ -206,6 +196,23 @@ const RectifierScreen = ({ route, navigation }) => {
                 </TouchableOpacity>
               </View>
             ))}
+          </View>
+          <View style={styles.timerContainer}>
+            <TouchableOpacity
+              style={styles.adjustButton}
+              onPress={() => adjustTimer(5)}
+            >
+              <Text style={styles.adjustButtonText}>+5 Min</Text>
+            </TouchableOpacity>
+            <View style={styles.timerBox}>
+              <Text style={styles.timerText}>{formatTime(timer)}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.adjustButton}
+              onPress={() => adjustTimer(-5)}
+            >
+              <Text style={styles.adjustButtonText}>-5 Min</Text>
+            </TouchableOpacity>
           </View>
         </View>
         <View style={styles.separatorBar} />
