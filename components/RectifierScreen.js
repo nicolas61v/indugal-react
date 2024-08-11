@@ -1,10 +1,10 @@
 import React, { useContext, useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Alert, ScrollView } from 'react-native';
 import { TimerContext } from '../components/TimerContext';
 import styles from '../styles/RectifierScreenStyles';
 
 const RectifierScreen = ({ route, navigation }) => {
-  const { rectifierId } = route.params;
+  const { rectifierId, clientData } = route.params;
   const { 
     timers, 
     startTimer, 
@@ -167,14 +167,16 @@ const RectifierScreen = ({ route, navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.topRectangle} />
-      <Image source={require('../assets/indugalLogo.png')} style={styles.logo} />
-      <View style={styles.titleContainer}>
-        <Text style={styles.title}>BAÑO {rectifierId}</Text>
-        <Text style={styles.amperageCount}>Toques: {amperageCount}</Text>
-      </View>
-      <View style={styles.contentContainer}>
+    <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+      <View style={styles.container}>
+        <View style={styles.topRectangle} />
+        <Image source={require('../assets/indugalLogo.png')} style={styles.logo} />
+        <View style={styles.titleContainer}>
+          <Text style={styles.title}>BAÑO {rectifierId}</Text>
+          <Text style={styles.amperageCount}>Toques: {amperageCount}</Text>
+        </View>
+        <View style={styles.contentContainer}>
+
         <View style={styles.controlsRow}>
           <View style={styles.orderValueContainer}>
             {localOrderValue.map((digit, index) => (
@@ -231,8 +233,9 @@ const RectifierScreen = ({ route, navigation }) => {
         >
           <Text style={styles.backButtonText}>MENU</Text>
         </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 

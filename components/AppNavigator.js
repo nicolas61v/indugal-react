@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import RectifierScreen from '../components/RectifierScreen';
 import { TimerContext } from '../components/TimerContext';
+import ClientDataScreen from '../components/ClientDataScreen';
 import styles from '../styles/AppNavigatorStyles';
 
 const Stack = createStackNavigator();
@@ -22,7 +23,7 @@ const HomeScreen = ({ navigation }) => {
         styles.button,
         activeStates[rectifierId] === `relay${rectifierId}on` ? styles.activeButton : null
       ]}
-      onPress={() => navigation.navigate('Rectifier', { rectifierId })}
+      onPress={() => navigation.navigate('ClientData', { rectifierId })}
       key={rectifierId}
     >
       <Text style={styles.buttonText}>{title}</Text>
@@ -40,6 +41,7 @@ const HomeScreen = ({ navigation }) => {
   );
 
   return (
+    <ScrollView contentContainerStyle={styles.scrollViewContainer}>
     <View style={styles.container}>
       <View style={styles.topRectangle} />
       <Image source={require('../assets/indugalLogo.png')} style={styles.logo} />
@@ -56,23 +58,29 @@ const HomeScreen = ({ navigation }) => {
         </ScrollView>
       </View>
     </View>
+  </ScrollView>
   );
 };
 
 const AppNavigator = () => {
   return (
     <Stack.Navigator initialRouteName="Home">
-      <Stack.Screen 
-        name="Home" 
-        component={HomeScreen} 
-        options={{ title: 'Home' }}
-      />
-      <Stack.Screen 
-        name="Rectifier" 
-        component={RectifierScreen} 
-        options={{ title: 'Rectifier' }}
-      />
-    </Stack.Navigator>
+    <Stack.Screen 
+      name="Home" 
+      component={HomeScreen} 
+      options={{ title: 'Home' }}
+    />
+    <Stack.Screen 
+      name="ClientData" 
+      component={ClientDataScreen} 
+      options={{ title: 'Datos del Cliente' }}
+    />
+    <Stack.Screen 
+      name="Rectifier" 
+      component={RectifierScreen} 
+      options={{ title: 'Rectifier' }}
+    />
+  </Stack.Navigator>
   );
 };
 

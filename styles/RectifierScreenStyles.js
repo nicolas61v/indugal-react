@@ -1,8 +1,9 @@
 import { StyleSheet, Dimensions } from 'react-native';
 
-const windowHeight = Dimensions.get('window').height;
-
 const styles = StyleSheet.create({
+  scrollViewContainer: {
+    flexGrow: 1,
+  },
     titleContainer: {
       flexDirection: 'row',
       alignItems: 'center',
