@@ -10,11 +10,6 @@ const styles = StyleSheet.create({
       width: '80%',
       marginBottom: 10,
     },
-    topRectangle: {
-      height: windowHeight * 0.25,
-      width: '100%',
-      backgroundColor: '#e0e0e0', // Un gris claro, puedes cambiarlo al color que prefieras
-    },
     amperageCount: {
       fontSize: 18,
       fontWeight: 'bold',

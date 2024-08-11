@@ -9,11 +9,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
   },
-  topRectangle: {
-      height: windowHeight * 0.15,
-      width: '100%',
-      backgroundColor: '#e0e0e0', // Un gris claro, puedes cambiarlo al color que prefieras
-    },
   logo: {
     width: '80%',
     height: 100,
