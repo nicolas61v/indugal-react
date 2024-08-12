@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
       backgroundColor: '#3949ab',
       paddingVertical: 10,
       paddingHorizontal: 20,
-      borderRadius: 30,
+      borderRadius: 15,
       marginHorizontal: 5,
       flex: 1,
       alignItems: 'center',
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
       backgroundColor: '#3949ab',
       paddingVertical: 10,
       paddingHorizontal: 20,
-      borderRadius: 20,
+      borderRadius: 15,
     },
     backButtonText: {
       color: '#fff',

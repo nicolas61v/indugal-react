@@ -4,6 +4,7 @@ const styles = StyleSheet.create({
   scrollViewContainer: {
     flexGrow: 1,
   },
+
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -29,7 +30,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#3949ab',
     paddingVertical: 15,
     paddingHorizontal: 20,
-    borderRadius: 30,
+    borderRadius: 15,
     marginVertical: 20,
     alignItems: 'center',
     width: 150,
@@ -49,7 +50,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingVertical: 5,
     paddingHorizontal: 10,
-    borderRadius: 15,
+    borderRadius: 5,
   },
   timerText: {
     color: '#fff',
@@ -65,7 +66,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     paddingVertical: 2,
     paddingHorizontal: 10,
-    borderRadius: 7,
+    borderRadius: 5,
     marginVertical: 5,
   },
   orderText: {
