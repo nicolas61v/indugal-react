@@ -14,14 +14,12 @@ const RectifierScreen = ({ route, navigation }) => {
     setActiveButton, 
     handleCommandWithRetry,
     orderNumbers,
-    setOrderNumber,
     amperageCounts,
     updateAmperageCount
   } = useContext(TimerContext);
   
   const timer = timers[rectifierId] || 0;
   const activeButton = activeStates[rectifierId] || null;
-  const [localOrderValue, setLocalOrderValue] = useState(orderNumbers[rectifierId] || [0, 0]);
   const amperageCount = amperageCounts[rectifierId] || 0;
   const lastAmpChangeTime = useRef(0);
 
@@ -30,12 +28,6 @@ const RectifierScreen = ({ route, navigation }) => {
       startTimer(rectifierId);
     }
   }, [timer, activeButton, rectifierId, startTimer]);
-
-  useEffect(() => {
-    if (timer === 0) {
-      setOrderNumber(rectifierId, localOrderValue);
-    }
-  }, [timer, localOrderValue, rectifierId, setOrderNumber]);
 
   const handleInitiate = () => {
     setActiveButton(rectifierId, `relay${rectifierId}on`);
@@ -69,7 +61,7 @@ const RectifierScreen = ({ route, navigation }) => {
 
     const now = Date.now();
     if (now - lastAmpChangeTime.current < 500) {
-      return; // Ignore if less than 0.3 seconds have passed
+      return; // Ignore if less than 0.5 seconds have passed
     }
     lastAmpChangeTime.current = now;
 
@@ -117,14 +109,10 @@ const RectifierScreen = ({ route, navigation }) => {
         } else if (command === 'pause') {
           handlePause();
         } else if (command === `relay${rectifierId}on`) {
-          if (timer === 0 || localOrderValue.every(digit => digit === 0)) {
-            let missingItems = [];
-            if (timer === 0) missingItems.push("tiempo");
-            if (localOrderValue.every(digit => digit === 0)) missingItems.push("número de orden");
-            
+          if (timer === 0) {
             Alert.alert(
               "Información incompleta",
-              `Falta establecer: ${missingItems.join(" y ")}`,
+              "Falta establecer el tiempo",
               [{ text: "OK" }]
             );
             return;
@@ -150,22 +138,6 @@ const RectifierScreen = ({ route, navigation }) => {
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  const adjustOrderValue = (index, adjustment) => {
-    if (timer === 0) {
-      setLocalOrderValue(prev => {
-        const newValue = [...prev];
-        newValue[index] = (newValue[index] + adjustment + 10) % 10;
-        return newValue;
-      });
-    } else {
-      Alert.alert(
-        "Acción no permitida",
-        "El número de orden solo se puede cambiar cuando el temporizador está en 0.",
-        [{ text: "OK" }]
-      );
-    }
-  };
-
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContainer}>
       <View style={styles.container}>
@@ -176,63 +148,41 @@ const RectifierScreen = ({ route, navigation }) => {
           <Text style={styles.amperageCount}>Toques: {amperageCount}</Text>
         </View>
         <View style={styles.contentContainer}>
-
-        <View style={styles.controlsRow}>
-          <View style={styles.orderValueContainer}>
-            {localOrderValue.map((digit, index) => (
-              <View key={index} style={styles.digitContainer}>
-                <TouchableOpacity
-                  style={styles.digitButton}
-                  onPress={() => adjustOrderValue(index, 1)}
-                >
-                  <Text style={styles.digitButtonText}>▲</Text>
-                </TouchableOpacity>
-                <View style={styles.digitBox}>
-                  <Text style={styles.digitText}>{digit}</Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.digitButton}
-                  onPress={() => adjustOrderValue(index, -1)}
-                >
-                  <Text style={styles.digitButtonText}>▼</Text>
-                </TouchableOpacity>
+          <View style={styles.controlsRow}>
+            <View style={styles.timerContainer}>
+              <TouchableOpacity
+                style={styles.adjustButton}
+                onPress={() => adjustTimer(5)}
+              >
+                <Text style={styles.adjustButtonText}>+5 Min</Text>
+              </TouchableOpacity>
+              <View style={styles.timerBox}>
+                <Text style={styles.timerText}>{formatTime(timer)}</Text>
               </View>
-            ))}
-          </View>
-          <View style={styles.timerContainer}>
-            <TouchableOpacity
-              style={styles.adjustButton}
-              onPress={() => adjustTimer(5)}
-            >
-              <Text style={styles.adjustButtonText}>+5 Min</Text>
-            </TouchableOpacity>
-            <View style={styles.timerBox}>
-              <Text style={styles.timerText}>{formatTime(timer)}</Text>
+              <TouchableOpacity
+                style={styles.adjustButton}
+                onPress={() => adjustTimer(-5)}
+              >
+                <Text style={styles.adjustButtonText}>-5 Min</Text>
+              </TouchableOpacity>
             </View>
-            <TouchableOpacity
-              style={styles.adjustButton}
-              onPress={() => adjustTimer(-5)}
-            >
-              <Text style={styles.adjustButtonText}>-5 Min</Text>
-            </TouchableOpacity>
           </View>
-        </View>
-        <View style={styles.separatorBar} />
-        <View style={styles.buttonRow}>
-          {renderButton('▼', `R${rectifierId}DOWN`, false)}
-          {renderButton('▲', `R${rectifierId}UP`, false)}
-        </View>
-        <View style={styles.buttonRow}>
-          {renderButton('INICIAR', `relay${rectifierId}on`, true)}
-          {renderButton('PAUSAR', 'pause', true)}
-          {renderButton('DETENER', `relay${rectifierId}off`, true)}
-        </View>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>MENU</Text>
-        </TouchableOpacity>
+          <View style={styles.separatorBar} />
+          <View style={styles.buttonRow}>
+            {renderButton('▼', `R${rectifierId}DOWN`, false)}
+            {renderButton('▲', `R${rectifierId}UP`, false)}
+          </View>
+          <View style={styles.buttonRow}>
+            {renderButton('INICIAR', `relay${rectifierId}on`, true)}
+            {renderButton('PAUSAR', 'pause', true)}
+            {renderButton('DETENER', `relay${rectifierId}off`, true)}
+          </View>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backButtonText}>MENU</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </ScrollView>

@@ -7,6 +7,7 @@ export const TimerProvider = ({ children }) => {
   const [timers, setTimers] = useState({});
   const [activeStates, setActiveStates] = useState({});
   const [orderNumbers, setOrderNumbers] = useState({});
+  const [documentNumbers, setDocumentNumbers] = useState({});
   const [activeTimers, setActiveTimers] = useState({});
   const [amperageCounts, setAmperageCounts] = useState({});
   const [amperageReductionSchedule, setAmperageReductionSchedule] = useState({});
@@ -34,7 +35,6 @@ export const TimerProvider = ({ children }) => {
             updatedTimers[rectifierId]--;
             hasChanges = true;
 
-            // Check if we need to start or continue amperage reduction
             if (updatedTimers[rectifierId] <= 420 && updatedTimers[rectifierId] > 0) {
               handleAmperageReduction(rectifierId, updatedTimers[rectifierId]);
             }
@@ -64,7 +64,7 @@ export const TimerProvider = ({ children }) => {
 
         if (hasChanges) {
           if (saveTimerTimeout.current) clearTimeout(saveTimerTimeout.current);
-          saveTimerTimeout.current = setTimeout(() => saveData(updatedTimers, activeStates, orderNumbers, amperageCounts), 1000);
+          saveTimerTimeout.current = setTimeout(() => saveData(updatedTimers, activeStates, orderNumbers, documentNumbers, amperageCounts), 1000);
         }
 
         return hasChanges ? updatedTimers : prevTimers;
@@ -79,7 +79,6 @@ export const TimerProvider = ({ children }) => {
     const schedule = amperageReductionSchedule[rectifierId];
 
     if (!schedule) {
-      // Initialize the reduction schedule
       const newSchedule = [];
       for (let i = 0; i < currentCount; i++) {
         const reductionTime = Math.floor(300 / currentCount * i);
@@ -87,7 +86,6 @@ export const TimerProvider = ({ children }) => {
       }
       setAmperageReductionSchedule(prev => ({ ...prev, [rectifierId]: newSchedule }));
     } else if (schedule.length > 0 && remainingTime <= schedule[0]) {
-      // Time to reduce amperage
       setAmperageCounts(prev => ({
         ...prev,
         [rectifierId]: Math.max(0, prev[rectifierId] - 1)
@@ -105,21 +103,24 @@ export const TimerProvider = ({ children }) => {
       const storedTimers = await AsyncStorage.getItem('timers');
       const storedStates = await AsyncStorage.getItem('activeStates');
       const storedOrderNumbers = await AsyncStorage.getItem('orderNumbers');
+      const storedDocumentNumbers = await AsyncStorage.getItem('documentNumbers');
       const storedAmperageCounts = await AsyncStorage.getItem('amperageCounts');
       if (storedTimers) setTimers(JSON.parse(storedTimers));
       if (storedStates) setActiveStates(JSON.parse(storedStates));
       if (storedOrderNumbers) setOrderNumbers(JSON.parse(storedOrderNumbers));
+      if (storedDocumentNumbers) setDocumentNumbers(JSON.parse(storedDocumentNumbers));
       if (storedAmperageCounts) setAmperageCounts(JSON.parse(storedAmperageCounts));
     } catch (error) {
       console.error('Error loading data:', error);
     }
   };
 
-  const saveData = useCallback(async (newTimers, newStates, newOrderNumbers, newAmperageCounts) => {
+  const saveData = useCallback(async (newTimers, newStates, newOrderNumbers, newDocumentNumbers, newAmperageCounts) => {
     try {
       await AsyncStorage.setItem('timers', JSON.stringify(newTimers));
       await AsyncStorage.setItem('activeStates', JSON.stringify(newStates));
       await AsyncStorage.setItem('orderNumbers', JSON.stringify(newOrderNumbers));
+      await AsyncStorage.setItem('documentNumbers', JSON.stringify(newDocumentNumbers));
       await AsyncStorage.setItem('amperageCounts', JSON.stringify(newAmperageCounts));
     } catch (error) {
       console.error('Error saving data:', error);
@@ -162,18 +163,26 @@ export const TimerProvider = ({ children }) => {
   const setOrderNumber = useCallback((rectifierId, orderNumber) => {
     setOrderNumbers((prevOrderNumbers) => {
       const updatedOrderNumbers = { ...prevOrderNumbers, [rectifierId]: orderNumber };
-      saveData(timers, activeStates, updatedOrderNumbers, amperageCounts);
+      saveData(timers, activeStates, updatedOrderNumbers, documentNumbers, amperageCounts);
       return updatedOrderNumbers;
     });
-  }, [timers, activeStates, amperageCounts, saveData]);
+  }, [timers, activeStates, documentNumbers, amperageCounts, saveData]);
+
+  const setDocumentNumber = useCallback((rectifierId, documentNumber) => {
+    setDocumentNumbers((prevDocumentNumbers) => {
+      const updatedDocumentNumbers = { ...prevDocumentNumbers, [rectifierId]: documentNumber };
+      saveData(timers, activeStates, orderNumbers, updatedDocumentNumbers, amperageCounts);
+      return updatedDocumentNumbers;
+    });
+  }, [timers, activeStates, orderNumbers, amperageCounts, saveData]);
 
   const resetOrderNumber = useCallback((rectifierId) => {
     setOrderNumbers((prevOrderNumbers) => {
       const updatedOrderNumbers = { ...prevOrderNumbers, [rectifierId]: [0, 0] };
-      saveData(timers, activeStates, updatedOrderNumbers, amperageCounts);
+      saveData(timers, activeStates, updatedOrderNumbers, documentNumbers, amperageCounts);
       return updatedOrderNumbers;
     });
-  }, [timers, activeStates, amperageCounts, saveData]);
+  }, [timers, activeStates, documentNumbers, amperageCounts, saveData]);
 
   const stopTimer = useCallback((rectifierId) => {
     setActiveTimers(prev => {
@@ -190,32 +199,31 @@ export const TimerProvider = ({ children }) => {
   const setTimerDuration = useCallback((rectifierId, duration) => {
     setTimers((prevTimers) => {
       const updatedTimers = { ...prevTimers, [rectifierId]: duration };
-      saveData(updatedTimers, activeStates, orderNumbers, amperageCounts);
+      saveData(updatedTimers, activeStates, orderNumbers, documentNumbers, amperageCounts);
       return updatedTimers;
     });
-  }, [activeStates, orderNumbers, amperageCounts, saveData]);
+  }, [activeStates, orderNumbers, documentNumbers, amperageCounts, saveData]);
 
   const setActiveButton = useCallback((rectifierId, state) => {
     setActiveStates((prevStates) => {
       const newStates = { ...prevStates, [rectifierId]: state };
-      saveData(timers, newStates, orderNumbers, amperageCounts);
+      saveData(timers, newStates, orderNumbers, documentNumbers, amperageCounts);
       return newStates;
     });
-  }, [timers, orderNumbers, amperageCounts, saveData]);
+  }, [timers, orderNumbers, documentNumbers, amperageCounts, saveData]);
 
   const updateAmperageCount = useCallback((rectifierId, count) => {
     setAmperageCounts((prevCounts) => {
       const newCounts = { ...prevCounts, [rectifierId]: count };
-      saveData(timers, activeStates, orderNumbers, newCounts);
+      saveData(timers, activeStates, orderNumbers, documentNumbers, newCounts);
       return newCounts;
     });
-    // Reset the amperage reduction schedule when the count is updated
     setAmperageReductionSchedule(prev => {
       const newSchedule = { ...prev };
       delete newSchedule[rectifierId];
       return newSchedule;
     });
-  }, [timers, activeStates, orderNumbers, saveData]);
+  }, [timers, activeStates, orderNumbers, documentNumbers, saveData]);
 
   const contextValue = {
     timers,
@@ -227,6 +235,8 @@ export const TimerProvider = ({ children }) => {
     handleCommandWithRetry,
     orderNumbers,
     setOrderNumber,
+    documentNumbers,
+    setDocumentNumber,
     resetOrderNumber,
     amperageCounts,
     updateAmperageCount

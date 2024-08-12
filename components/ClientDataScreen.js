@@ -1,48 +1,77 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { TimerContext } from '../components/TimerContext';
 import styles from '../styles/ClientDataStyles';
 
 const ClientDataScreen = ({ navigation, route }) => {
   const { rectifierId } = route.params;
-  const [document, setDocument] = useState('');
-  const [orderNumber, setOrderNumber] = useState('');
+  const { orderNumbers, setOrderNumber, documentNumbers, setDocumentNumber } = useContext(TimerContext);
+  const [documentValue, setDocumentValue] = useState(documentNumbers[rectifierId] || [0, 0, 0, 0, 0]);
+  const [orderValue, setOrderValue] = useState(orderNumbers[rectifierId] || [0, 0]);
 
   const isFormComplete = () => {
-    return document && orderNumber;
+    return documentValue.some(digit => digit !== 0) && orderValue.some(digit => digit !== 0);
   };
 
   const handleNext = () => {
     if (isFormComplete()) {
+      setOrderNumber(rectifierId, orderValue);
+      setDocumentNumber(rectifierId, documentValue);
       navigation.navigate('Rectifier', {
         rectifierId,
-        clientData: { document, orderNumber }
+        clientData: { 
+          document: documentValue.join(''), 
+          orderNumber: orderValue.join('') 
+        }
       });
     } else {
       alert('Por favor, complete todos los campos antes de continuar.');
     }
   };
 
+  const adjustValue = (setter, value, index, adjustment) => {
+    setter(prev => {
+      const newValue = [...prev];
+      newValue[index] = (newValue[index] + adjustment + 10) % 10;
+      return newValue;
+    });
+  };
+
+  const renderDigitInput = (value, setter, digits) => (
+    <View style={styles.valueContainer}>
+      {value.map((digit, index) => (
+        <View key={index} style={styles.digitContainer}>
+          <TouchableOpacity
+            style={styles.digitButton}
+            onPress={() => adjustValue(setter, value, index, 1)}
+          >
+            <Text style={styles.digitButtonText}>▲</Text>
+          </TouchableOpacity>
+          <View style={styles.digitBox}>
+            <Text style={styles.digitText}>{digit}</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.digitButton}
+            onPress={() => adjustValue(setter, value, index, -1)}
+          >
+            <Text style={styles.digitButtonText}>▼</Text>
+          </TouchableOpacity>
+        </View>
+      ))}
+    </View>
+  );
+
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContainer}>
       <View style={styles.container}>
         <Text style={styles.title}>Datos del Cliente y Proceso</Text>
-
+        
         <Text style={styles.label}>Documento (ID de factura o baño)</Text>
-        <TextInput
-          style={styles.input}
-          value={document}
-          onChangeText={setDocument}
-          placeholder="Ingrese el documento"
-        />
-
+        {renderDigitInput(documentValue, setDocumentValue, 5)}
+        
         <Text style={styles.label}>Orden No.</Text>
-        <TextInput
-          style={styles.input}
-          value={orderNumber}
-          onChangeText={setOrderNumber}
-          placeholder="Ingrese el número de orden"
-        />
-
+        {renderDigitInput(orderValue, setOrderValue, 2)}
+        
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[styles.button, styles.menuButton]}
