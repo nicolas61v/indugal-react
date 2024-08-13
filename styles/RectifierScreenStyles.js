@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
     },
     timerContainer: {
       flex: 1,
-      flexDirection: 'column',
+      flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 2,

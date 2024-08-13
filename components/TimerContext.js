@@ -163,26 +163,29 @@ export const TimerProvider = ({ children }) => {
   const setOrderNumber = useCallback((rectifierId, orderNumber) => {
     setOrderNumbers((prevOrderNumbers) => {
       const updatedOrderNumbers = { ...prevOrderNumbers, [rectifierId]: orderNumber };
-      saveData(timers, activeStates, updatedOrderNumbers, documentNumbers, amperageCounts);
+      AsyncStorage.setItem('orderNumbers', JSON.stringify(updatedOrderNumbers))
+        .catch(error => console.error('Error saving order numbers:', error));
       return updatedOrderNumbers;
     });
-  }, [timers, activeStates, documentNumbers, amperageCounts, saveData]);
+  }, []);
 
   const setDocumentNumber = useCallback((rectifierId, documentNumber) => {
     setDocumentNumbers((prevDocumentNumbers) => {
       const updatedDocumentNumbers = { ...prevDocumentNumbers, [rectifierId]: documentNumber };
-      saveData(timers, activeStates, orderNumbers, updatedDocumentNumbers, amperageCounts);
+      AsyncStorage.setItem('documentNumbers', JSON.stringify(updatedDocumentNumbers))
+        .catch(error => console.error('Error saving document numbers:', error));
       return updatedDocumentNumbers;
     });
-  }, [timers, activeStates, orderNumbers, amperageCounts, saveData]);
+  }, []);
 
   const resetOrderNumber = useCallback((rectifierId) => {
     setOrderNumbers((prevOrderNumbers) => {
       const updatedOrderNumbers = { ...prevOrderNumbers, [rectifierId]: [0, 0] };
-      saveData(timers, activeStates, updatedOrderNumbers, documentNumbers, amperageCounts);
+      AsyncStorage.setItem('orderNumbers', JSON.stringify(updatedOrderNumbers))
+        .catch(error => console.error('Error resetting order number:', error));
       return updatedOrderNumbers;
     });
-  }, [timers, activeStates, documentNumbers, amperageCounts, saveData]);
+  }, []);
 
   const stopTimer = useCallback((rectifierId) => {
     setActiveTimers(prev => {

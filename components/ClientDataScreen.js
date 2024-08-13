@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { TimerContext } from '../components/TimerContext';
 import styles from '../styles/ClientDataStyles';
@@ -6,8 +6,18 @@ import styles from '../styles/ClientDataStyles';
 const ClientDataScreen = ({ navigation, route }) => {
   const { rectifierId } = route.params;
   const { orderNumbers, setOrderNumber, documentNumbers, setDocumentNumber } = useContext(TimerContext);
-  const [documentValue, setDocumentValue] = useState(documentNumbers[rectifierId] || [0, 0, 0, 0, 0]);
-  const [orderValue, setOrderValue] = useState(orderNumbers[rectifierId] || [0, 0]);
+  const [documentValue, setDocumentValue] = useState([0, 0, 0, 0, 0]);
+  const [orderValue, setOrderValue] = useState([0, 0]);
+
+  useEffect(() => {
+    // Cargar valores guardados cuando el componente se monta
+    if (documentNumbers[rectifierId]) {
+      setDocumentValue(documentNumbers[rectifierId]);
+    }
+    if (orderNumbers[rectifierId]) {
+      setOrderValue(orderNumbers[rectifierId]);
+    }
+  }, [rectifierId, documentNumbers, orderNumbers]);
 
   const isFormComplete = () => {
     return documentValue.some(digit => digit !== 0) && orderValue.some(digit => digit !== 0);
