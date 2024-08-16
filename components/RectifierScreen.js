@@ -141,10 +141,9 @@ const RectifierScreen = ({ route, navigation }) => {
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContainer}>
       <View style={styles.container}>
-        <View style={styles.topRectangle} />
         <Image source={require('../assets/indugalLogo.png')} style={styles.logo} />
         <View style={styles.squareBox} />
-        <View style={styles.titleContainer}>
+        <View style={styles.infoContainer}>
           <Text style={styles.title}>BAÑO {rectifierId}</Text>
           <Text style={styles.amperageCount}>Toques: {amperageCount}</Text>
         </View>
@@ -177,12 +176,18 @@ const RectifierScreen = ({ route, navigation }) => {
             {renderButton('PAUSAR', 'pause', true)}
             {renderButton('DETENER', `relay${rectifierId}off`, true)}
           </View>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.backButtonText}>MENU</Text>
-          </TouchableOpacity>
+          <View style={styles.navigationButtonsContainer}>
+            <TouchableOpacity
+              style={styles.navigationButton}
+              onPress={() => navigation.goBack()}>
+              <Text style={styles.navigationButtonText}>CLIENTE</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.navigationButton}
+              onPress={() => navigation.navigate('Home')}>
+              <Text style={styles.navigationButtonText}>MENU</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </ScrollView>

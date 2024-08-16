@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { TimerContext } from '../components/TimerContext';
 import styles from '../styles/ClientDataStyles';
 
@@ -10,7 +10,6 @@ const ClientDataScreen = ({ navigation, route }) => {
   const [orderValue, setOrderValue] = useState([0, 0]);
 
   useEffect(() => {
-    // Cargar valores guardados cuando el componente se monta
     if (documentNumbers[rectifierId]) {
       setDocumentValue(documentNumbers[rectifierId]);
     }
@@ -74,14 +73,21 @@ const ClientDataScreen = ({ navigation, route }) => {
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContainer}>
       <View style={styles.container}>
-        <Text style={styles.title}>Datos del Cliente y Proceso</Text>
+        <Image source={require('../assets/indugalLogo.png')} style={styles.logo} />
         <View style={styles.squareBox} />
+        <View style={styles.infoContainer}>
+          <Text style={styles.title}>Datos del Cliente y Proceso</Text>
+        </View>
         
-        <Text style={styles.label}>Documento (ID de factura o baño)</Text>
-        {renderDigitInput(documentValue, setDocumentValue, 5)}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Documento (ID de factura o baño)</Text>
+          {renderDigitInput(documentValue, setDocumentValue, 5)}
+        </View>
         
-        <Text style={styles.label}>Orden No.</Text>
-        {renderDigitInput(orderValue, setOrderValue, 2)}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Orden No.</Text>
+          {renderDigitInput(orderValue, setOrderValue, 2)}
+        </View>
         
         <View style={styles.buttonContainer}>
           <TouchableOpacity
