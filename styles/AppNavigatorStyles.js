@@ -6,12 +6,12 @@ const styles = StyleSheet.create({
   scrollViewContainer: {
     flexGrow: 1,
   },
-
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
+    paddingTop: 20,
   },
   logo: {
     width: '80%',
@@ -21,9 +21,18 @@ const styles = StyleSheet.create({
   },
   squareBox: {
     width: '100%',
-    height: screenHeight * 0.25, // 20% de la altura de la pantalla
-    backgroundColor: '#3949ab',
+    height: screenHeight * 0.25,
+    backgroundColor: '#1e3a8a',
     marginBottom: 20,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -35,17 +44,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
-    backgroundColor: '#3949ab',
+    backgroundColor: '#3b82f6',
     paddingVertical: 15,
     paddingHorizontal: 20,
-    borderRadius: 15,
+    borderRadius: 10,
     marginVertical: 20,
     alignItems: 'center',
     width: 150,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
     elevation: 3,
   },
   activeButton: {
-    backgroundColor: '#1a237e',
+    backgroundColor: '#1e3a8a',
   },
   buttonText: {
     textAlign: 'center',
@@ -55,10 +71,10 @@ const styles = StyleSheet.create({
   },
   timerContainer: {
     marginTop: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     paddingVertical: 5,
     paddingHorizontal: 10,
-    borderRadius: 5,
+    borderRadius: 8,
   },
   timerText: {
     color: '#fff',
@@ -71,17 +87,17 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   orderContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingVertical: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    paddingVertical: 3,
     paddingHorizontal: 10,
-    borderRadius: 5,
+    borderRadius: 8,
     marginVertical: 5,
   },
   orderText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
-    justifyContent: 'center',
+    textAlign: 'center',
   },
 });
 

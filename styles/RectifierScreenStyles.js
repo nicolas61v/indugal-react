@@ -74,7 +74,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   timerContainer: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     backgroundColor: '#ffffff',
     borderRadius: 10,
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   },
   adjustButtonText: {
     color: '#ffffff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
   timerBox: {
