@@ -143,6 +143,7 @@ const RectifierScreen = ({ route, navigation }) => {
       <View style={styles.container}>
         <View style={styles.topRectangle} />
         <Image source={require('../assets/indugalLogo.png')} style={styles.logo} />
+        <View style={styles.squareBox} />
         <View style={styles.titleContainer}>
           <Text style={styles.title}>BAÑO {rectifierId}</Text>
           <Text style={styles.amperageCount}>Toques: {amperageCount}</Text>
@@ -152,8 +153,7 @@ const RectifierScreen = ({ route, navigation }) => {
             <View style={styles.timerContainer}>
               <TouchableOpacity
                 style={styles.adjustButton}
-                onPress={() => adjustTimer(5)}
-              >
+                onPress={() => adjustTimer(5)}>
                 <Text style={styles.adjustButtonText}>+5 Min</Text>
               </TouchableOpacity>
               <View style={styles.timerBox}>

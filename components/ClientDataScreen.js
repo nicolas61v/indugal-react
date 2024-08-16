@@ -75,6 +75,7 @@ const ClientDataScreen = ({ navigation, route }) => {
     <ScrollView contentContainerStyle={styles.scrollViewContainer}>
       <View style={styles.container}>
         <Text style={styles.title}>Datos del Cliente y Proceso</Text>
+        <View style={styles.squareBox} />
         
         <Text style={styles.label}>Documento (ID de factura o baño)</Text>
         {renderDigitInput(documentValue, setDocumentValue, 5)}

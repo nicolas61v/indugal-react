@@ -1,4 +1,6 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { height: screenHeight } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   scrollViewContainer: {
@@ -20,6 +22,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginTop: 10,
     marginBottom: 5,
+  },
+  squareBox: {
+    width: '100%',
+    height: screenHeight * 0.25, // 20% de la altura de la pantalla
+    backgroundColor: '#3949ab',
+    marginBottom: 20,
   },
   valueContainer: {
     flexDirection: 'row',

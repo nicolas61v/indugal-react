@@ -1,5 +1,7 @@
 import { StyleSheet, Dimensions } from 'react-native';
 
+const { height: screenHeight } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
   scrollViewContainer: {
     flexGrow: 1,
@@ -10,6 +12,12 @@ const styles = StyleSheet.create({
       justifyContent: 'space-between',
       width: '80%',
       marginBottom: 10,
+    },
+    squareBox: {
+      width: '100%',
+      height: screenHeight * 0.25, // 20% de la altura de la pantalla
+      backgroundColor: '#3949ab',
+      marginBottom: 20,
     },
     amperageCount: {
       fontSize: 18,
@@ -97,7 +105,7 @@ const styles = StyleSheet.create({
     },
     timerContainer: {
       flex: 1,
-      flexDirection: 'row',
+      flexDirection: 'row-reverse',
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 2,
