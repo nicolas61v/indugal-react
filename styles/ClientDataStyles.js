@@ -20,7 +20,7 @@ const styles = StyleSheet.create({
   },
   squareBox: {
     width: '100%',
-    height: screenHeight * 0.10,
+    height: screenHeight * 0.12,
     backgroundColor: '#1e3a8a',
     marginBottom: 20,
     borderRadius: 10,
