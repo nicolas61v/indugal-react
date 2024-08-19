@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
   squareBox: {
     width: '100%',
     height: screenHeight * 0.25,
-    backgroundColor: '#1e3a8a',
+    backgroundColor: '#303F9F',
     marginBottom: 20,
     borderRadius: 10,
     shadowColor: "#000",
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#3F51B5',
     paddingVertical: 15,
     paddingHorizontal: 20,
     borderRadius: 10,
