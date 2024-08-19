@@ -109,19 +109,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1e3a8a',
   },
+  logo: {
+    width: '80%',
+    height: 80,
+    resizeMode: 'contain',
+    marginBottom: 20,
+  },
+  
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '90%',
     marginTop: 20,
-    marginBottom: 10,
   },
   button: {
     paddingVertical: 15,
-    paddingHorizontal: 20,
+    paddingHorizontal: 10,
     borderRadius: 10,
-    width: '48%',
     alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -133,9 +139,15 @@ const styles = StyleSheet.create({
   },
   menuButton: {
     backgroundColor: '#1e3a8a',
+    width: '30%',  // Ajustado para que los tres botones ocupen el mismo espacio
+  },
+  historyButton: {
+    backgroundColor: '#1e3a8a',
+    width: '30%',  // Ajustado para que los tres botones ocupen el mismo espacio
   },
   nextButton: {
     backgroundColor: '#3b82f6',
+    width: '30%',  // Ajustado para que los tres botones ocupen el mismo espacio
   },
   disabledButton: {
     backgroundColor: '#a0aec0',
@@ -143,8 +155,9 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#ffffff',
-    fontSize: 18,
+    fontSize: 14,  // Reducido el tamaño de la fuente para que quepa en los botones más pequeños
     fontWeight: 'bold',
+    textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,
