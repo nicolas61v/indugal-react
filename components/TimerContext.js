@@ -42,7 +42,6 @@ export const TimerProvider = ({ children }) => {
             if (updatedTimers[rectifierId] === 0) {
               handleCommandWithRetry(`relay${rectifierId}off`, rectifierId, false);
               setActiveStates(prev => ({ ...prev, [rectifierId]: `relay${rectifierId}off` }));
-              resetOrderNumber(rectifierId);
               setActiveTimers(prev => {
                 const newActiveTimers = { ...prev };
                 delete newActiveTimers[rectifierId];
