@@ -114,6 +114,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '90%',
     marginTop: 20,
+    marginBottom: 10,
   },
   button: {
     paddingVertical: 15,

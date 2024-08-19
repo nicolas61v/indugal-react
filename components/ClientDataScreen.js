@@ -34,7 +34,21 @@ const ClientDataScreen = ({ navigation, route }) => {
         document: documentValue.join(''),
         orderNumber: orderValue.join('')
       };
-      addHistoryEntry(rectifierId, newHistoricalEntry);
+
+      // Obtener el historial actual del baño
+      const currentHistory = getHistoryForBath(rectifierId);
+
+      // Verificar si ya existe una entrada idéntica
+      const isDuplicate = currentHistory.some(entry => 
+        entry.document === newHistoricalEntry.document &&
+        entry.orderNumber === newHistoricalEntry.orderNumber &&
+        entry.date === newHistoricalEntry.date
+      );
+
+      // Si no es un duplicado, añadir al historial
+      if (!isDuplicate) {
+        addHistoryEntry(rectifierId, newHistoricalEntry);
+      }
 
       setOrderNumber(rectifierId, orderValue);
       setDocumentNumber(rectifierId, documentValue);
@@ -93,7 +107,7 @@ const ClientDataScreen = ({ navigation, route }) => {
         <View style={styles.modalView}>
           <Text style={styles.modalTitle}>Historial de Datos</Text>
           <ScrollView style={styles.modalScrollView}>
-            {getHistoryForBath(rectifierId).map((entry, index) => (
+            {getHistoryForBath(rectifierId).reverse().map((entry, index) => (
               <View key={index} style={styles.historicalEntry}>
                 <Text style={styles.historicalEntryText}>Fecha: {entry.date}</Text>
                 <Text style={styles.historicalEntryText}>Hora: {entry.time}</Text>
@@ -118,12 +132,9 @@ const ClientDataScreen = ({ navigation, route }) => {
       <View style={styles.container}>
         <Image source={require('../assets/indugalLogo.png')} style={styles.logo} />
         <View style={styles.squareBox} />
-        <TouchableOpacity 
-          style={styles.infoContainer}
-          onPress={() => setModalVisible(true)}
-        >
+        <View style={styles.infoContainer}>
           <Text style={styles.title}>Datos del Cliente y Proceso</Text>
-        </TouchableOpacity>
+        </View>
         
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Documento (ID de factura o baño)</Text>
@@ -143,17 +154,23 @@ const ClientDataScreen = ({ navigation, route }) => {
             <Text style={styles.buttonText}>MENU</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[
-              styles.button,
-              styles.nextButton,
-              !isFormComplete() && styles.disabledButton
-            ]}
-            onPress={handleNext}
-            disabled={!isFormComplete()}
+            style={[styles.button, styles.menuButton]}
+            onPress={() => setModalVisible(true)}
           >
-            <Text style={styles.buttonText}>SIGUIENTE</Text>
+            <Text style={styles.buttonText}>HISTORIAL</Text>
           </TouchableOpacity>
         </View>
+        <TouchableOpacity
+          style={[
+            styles.button,
+            styles.nextButton,
+            !isFormComplete() && styles.disabledButton
+          ]}
+          onPress={handleNext}
+          disabled={!isFormComplete()}
+        >
+          <Text style={styles.buttonText}>SIGUIENTE</Text>
+        </TouchableOpacity>
       </View>
       {renderHistoricalDataModal()}
     </ScrollView>
