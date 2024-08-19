@@ -1,6 +1,6 @@
 import { StyleSheet, Dimensions } from 'react-native';
 
-const { height: screenHeight } = Dimensions.get('window');
+const { height: screenHeight,  width: screenWidth } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   scrollViewContainer: {
@@ -144,6 +144,56 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalView: {
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 35,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: screenWidth * 0.9,
+    maxHeight: screenHeight * 0.8,
+  },
+  modalScrollView: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1e3a8a',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  historicalEntry: {
+    backgroundColor: '#f0f4f8',
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  historicalEntryText: {
+    fontSize: 16,
+    color: '#1e3a8a',
+    marginBottom: 5,
+  },
+  closeButton: {
+    backgroundColor: '#1e3a8a',
+    marginTop: 10,
+    paddingHorizontal: 30,
+    paddingVertical: 10,
   },
 });
 
