@@ -1,14 +1,15 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, Modal } from 'react-native';
 import { TimerContext } from '../components/TimerContext';
+import { HistoryContext } from '../components/HistoryContext';
 import styles from '../styles/ClientDataStyles';
 
 const ClientDataScreen = ({ navigation, route }) => {
   const { rectifierId } = route.params;
   const { orderNumbers, setOrderNumber, documentNumbers, setDocumentNumber } = useContext(TimerContext);
+  const { addHistoryEntry, getHistoryForBath } = useContext(HistoryContext);
   const [documentValue, setDocumentValue] = useState([0, 0, 0, 0, 0]);
   const [orderValue, setOrderValue] = useState([0, 0]);
-  const [historicalData, setHistoricalData] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
@@ -33,7 +34,7 @@ const ClientDataScreen = ({ navigation, route }) => {
         document: documentValue.join(''),
         orderNumber: orderValue.join('')
       };
-      setHistoricalData(prevData => [...prevData, newHistoricalEntry]);
+      addHistoryEntry(rectifierId, newHistoricalEntry);
 
       setOrderNumber(rectifierId, orderValue);
       setDocumentNumber(rectifierId, documentValue);
@@ -92,7 +93,7 @@ const ClientDataScreen = ({ navigation, route }) => {
         <View style={styles.modalView}>
           <Text style={styles.modalTitle}>Historial de Datos</Text>
           <ScrollView style={styles.modalScrollView}>
-            {historicalData.map((entry, index) => (
+            {getHistoryForBath(rectifierId).map((entry, index) => (
               <View key={index} style={styles.historicalEntry}>
                 <Text style={styles.historicalEntryText}>Fecha: {entry.date}</Text>
                 <Text style={styles.historicalEntryText}>Hora: {entry.time}</Text>
