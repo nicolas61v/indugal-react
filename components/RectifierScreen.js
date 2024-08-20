@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Image, Alert, ScrollView, Modal, ActivityIndicator } from 'react-native';
-import { Audio } from 'expo-av';
 import { TimerContext } from '../components/TimerContext';
+import { AlarmContext } from '../components/AlarmContext';
 import styles from '../styles/RectifierScreenStyles';
 
 const RectifierScreen = ({ route, navigation }) => {
@@ -19,69 +19,20 @@ const RectifierScreen = ({ route, navigation }) => {
     updateAmperageCount,
     handleStopWithGradualReduction,
   } = useContext(TimerContext);
-  
+
+  const { stopAlarm } = useContext(AlarmContext);
   const timer = timers[rectifierId] || 0;
   const activeButton = activeStates[rectifierId] || null;
   const amperageCount = amperageCounts[rectifierId] || 0;
   const lastAmpChangeTime = useRef(0);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const soundObject = useRef(new Audio.Sound());
-  const alarmTimeout = useRef(null);
-
-  useEffect(() => {
-    loadSound();
-    return () => {
-      unloadSound();
-    };
-  }, []);
-
-  const loadSound = async () => {
-    try {
-      await soundObject.current.loadAsync(require('../assets/alarm.mp3'));
-    } catch (error) {
-      console.error('Error loading sound', error);
-    }
-  };
-
-  const unloadSound = async () => {
-    try {
-      await soundObject.current.unloadAsync();
-    } catch (error) {
-      console.error('Error unloading sound', error);
-    }
-  };
 
   useEffect(() => {
     if (activeButton === `relay${rectifierId}on`) {
       startTimer(rectifierId);
     }
-  }, [timer, activeButton, rectifierId, startTimer]);
-
-  useEffect(() => {
-    const playAlarm = async () => {
-      try {
-        await soundObject.current.setPositionAsync(0);
-        await soundObject.current.playAsync();
-      } catch (error) {
-        console.error('Error playing sound', error);
-      }
-    };
-
-    if (timer === 20 && activeButton === `relay${rectifierId}on`) {
-      playAlarm();
-      alarmTimeout.current = setTimeout(() => {
-        soundObject.current.stopAsync();
-      }, 30000);  // Stop the alarm after 30 seconds
-    }
-
-    return () => {
-      if (alarmTimeout.current) {
-        clearTimeout(alarmTimeout.current);
-      }
-      soundObject.current.stopAsync();
-    };
-  }, [timer, activeButton, rectifierId]);
+  }, [activeButton, rectifierId, startTimer]);
 
   const handleInitiate = () => {
     setActiveButton(rectifierId, `relay${rectifierId}on`);
@@ -99,14 +50,11 @@ const RectifierScreen = ({ route, navigation }) => {
   const handlePrepare = () => {
     Alert.alert(
       "Detener y Reiniciar",
-      "Se detendrá el proceso y se reiniciará el temporizador. ¿Desea continuar?",
+      "El temporizador y los toques se reiniciaran. ¿Desea continuar?",
       [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Continuar", onPress: () => {
-          soundObject.current.stopAsync();  // Stop the alarm if it's playing
-          if (alarmTimeout.current) {
-            clearTimeout(alarmTimeout.current);
-          }
+        { text: "NO", style: "cancel" },
+        { text: "SI", onPress: () => {
+          stopAlarm(rectifierId);
           startGradualReduction();
         }}
       ]
@@ -119,8 +67,8 @@ const RectifierScreen = ({ route, navigation }) => {
       setIsLoading(false);
       setLoadingProgress(0);
       Alert.alert(
-        "Reducción Completa",
-        "Todos los toques han sido reducidos a cero.",
+        "Proceso Completado",
+        "El proceso ha sido detenido y el temporizador reiniciado.",
         [{ text: "OK" }]
       );
     });

@@ -1,9 +1,12 @@
-import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useRef, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AlarmContext } from './AlarmContext';
 
 export const TimerContext = createContext();
 
 export const TimerProvider = ({ children }) => {
+  const { startAlarm, stopAlarm } = useContext(AlarmContext);
+  
   const [timers, setTimers] = useState({});
   const [activeStates, setActiveStates] = useState({});
   const [orderNumbers, setOrderNumbers] = useState({});
@@ -11,6 +14,8 @@ export const TimerProvider = ({ children }) => {
   const [activeTimers, setActiveTimers] = useState({});
   const [amperageCounts, setAmperageCounts] = useState({});
   const [amperageReductionSchedule, setAmperageReductionSchedule] = useState({});
+  const [alarmTriggers, setAlarmTriggers] = useState({});
+  
   const saveTimerTimeout = useRef(null);
   const retryQueue = useRef([]);
   const isProcessingRetry = useRef(false);
@@ -35,6 +40,10 @@ export const TimerProvider = ({ children }) => {
             updatedTimers[rectifierId]--;
             hasChanges = true;
 
+            if (updatedTimers[rectifierId] === 20) {
+              setAlarmTriggers(prev => ({ ...prev, [rectifierId]: true }));
+            }
+
             if (updatedTimers[rectifierId] <= 420 && updatedTimers[rectifierId] > 0) {
               handleAmperageReduction(rectifierId, updatedTimers[rectifierId]);
             }
@@ -57,6 +66,11 @@ export const TimerProvider = ({ children }) => {
                 delete newSchedule[rectifierId];
                 return newSchedule;
               });
+              setAlarmTriggers(prev => {
+                const newTriggers = { ...prev };
+                delete newTriggers[rectifierId];
+                return newTriggers;
+              });
             }
           }
         });
@@ -73,31 +87,14 @@ export const TimerProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, [activeTimers, amperageCounts, amperageReductionSchedule]);
 
-  const handleStopWithGradualReduction = useCallback(async (rectifierId, progressCallback) => {
-    const currentCount = amperageCounts[rectifierId] || 0;
-    
-    for (let i = currentCount; i >= 0; i--) {
-      setAmperageCounts(prev => ({
-        ...prev,
-        [rectifierId]: i
-      }));
-      
-      if (i > 0) {
-        await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay between each reduction
-        handleCommandWithRetry(`R${rectifierId}DOWN`, rectifierId, true);
+  useEffect(() => {
+    Object.entries(alarmTriggers).forEach(([rectifierId, shouldTrigger]) => {
+      if (shouldTrigger) {
+        startAlarm(rectifierId);
+        setAlarmTriggers(prev => ({ ...prev, [rectifierId]: false }));
       }
-      
-      // Update progress
-      if (progressCallback) {
-        progressCallback((currentCount - i) / currentCount);
-      }
-    }
-    
-    // After reduction is complete, stop the timer and update states
-    stopTimer(rectifierId);
-    setActiveStates(prev => ({ ...prev, [rectifierId]: `relay${rectifierId}off` }));
-    handleCommandWithRetry(`relay${rectifierId}off`, rectifierId, false);
-  }, [amperageCounts, handleCommandWithRetry, stopTimer, setActiveStates]);
+    });
+  }, [alarmTriggers, startAlarm]);
 
   const handleAmperageReduction = (rectifierId, remainingTime) => {
     const currentCount = amperageCounts[rectifierId] || 0;
@@ -253,6 +250,34 @@ export const TimerProvider = ({ children }) => {
     });
   }, [timers, activeStates, orderNumbers, documentNumbers, saveData]);
 
+  const handleStopWithGradualReduction = useCallback(async (rectifierId, progressCallback) => {
+    stopAlarm(rectifierId);
+    const currentCount = amperageCounts[rectifierId] || 0;
+    
+    for (let i = currentCount; i >= 0; i--) {
+      setAmperageCounts(prev => ({
+        ...prev,
+        [rectifierId]: i
+      }));
+      
+      if (i > 0) {
+        await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay between each reduction
+        handleCommandWithRetry(`R${rectifierId}DOWN`, rectifierId, true);
+      }
+      
+      // Update progress
+      if (progressCallback) {
+        progressCallback((currentCount - i) / currentCount);
+      }
+    }
+    
+    // After reduction is complete, stop the timer, reset it, and update states
+    stopTimer(rectifierId);
+    setTimers(prev => ({ ...prev, [rectifierId]: 0 }));  // Reset timer to 0
+    setActiveStates(prev => ({ ...prev, [rectifierId]: null }));  // Reset active state
+    handleCommandWithRetry(`relay${rectifierId}off`, rectifierId, false);
+  }, [amperageCounts, handleCommandWithRetry, stopTimer, setActiveStates, setTimers, stopAlarm]);
+
   const contextValue = {
     timers,
     startTimer,
@@ -268,7 +293,7 @@ export const TimerProvider = ({ children }) => {
     resetOrderNumber,
     amperageCounts,
     updateAmperageCount,
-    handleStopWithGradualReduction
+    handleStopWithGradualReduction,
   };
 
   return (
