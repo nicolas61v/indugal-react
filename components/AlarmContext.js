@@ -18,7 +18,7 @@ export const AlarmProvider = ({ children }) => {
 
   const loadSound = async () => {
     try {
-      await soundObject.current.loadAsync(require('../assets/alarm.mp3'));
+      await soundObject.current.loadAsync(require('../assets/alarm2.mp3'));
     } catch (error) {
       console.error('Error loading sound', error);
     }
