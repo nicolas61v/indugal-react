@@ -183,6 +183,22 @@ const styles = StyleSheet.create({
   pauseButton: {
     backgroundColor: '#f59e0b',
   },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalText: {
+    fontSize: 16,
+    marginTop: 10,
+  },
 });
 
 export default styles;

@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, Image, Alert, ScrollView } from 'react-native';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { View, Text, TouchableOpacity, Image, Alert, ScrollView, Modal, ActivityIndicator } from 'react-native';
 import { TimerContext } from '../components/TimerContext';
 import styles from '../styles/RectifierScreenStyles';
 
@@ -15,13 +15,17 @@ const RectifierScreen = ({ route, navigation }) => {
     handleCommandWithRetry,
     orderNumbers,
     amperageCounts,
-    updateAmperageCount
+    updateAmperageCount,
+    handleStopWithGradualReduction,
   } = useContext(TimerContext);
   
   const timer = timers[rectifierId] || 0;
   const activeButton = activeStates[rectifierId] || null;
   const amperageCount = amperageCounts[rectifierId] || 0;
   const lastAmpChangeTime = useRef(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+
 
   useEffect(() => {
     if (activeButton === `relay${rectifierId}on`) {
@@ -43,10 +47,27 @@ const RectifierScreen = ({ route, navigation }) => {
   };
   
   const handlePrepare = () => {
-    setActiveButton(rectifierId, `relay${rectifierId}off`);
-    handleCommandWithRetry(`relay${rectifierId}off`, rectifierId, false);
-    stopTimer(rectifierId);
-    updateAmperageCount(rectifierId, 0);
+    Alert.alert(
+      "Reducción de Toques",
+      "Se iniciará la reducción gradual de toques. Este proceso puede tardar unos momentos. ¿Desea continuar?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Continuar", onPress: () => startGradualReduction() }
+      ]
+    );
+  };
+
+  const startGradualReduction = () => {
+    setIsLoading(true);
+    handleStopWithGradualReduction(rectifierId, setLoadingProgress).then(() => {
+      setIsLoading(false);
+      setLoadingProgress(0);
+      Alert.alert(
+        "Reducción Completa",
+        "Todos los toques han sido reducidos a cero.",
+        [{ text: "OK" }]
+      );
+    });
   };
 
   const handleAmpChange = async (command) => {
@@ -84,14 +105,14 @@ const RectifierScreen = ({ route, navigation }) => {
     }
   };
 
-  const renderButton = (title, command, isControlButton) => (
+  const renderButton = (title, commandOrFunction, isControlButton) => (
     <TouchableOpacity
       style={[
         styles.button,
         isControlButton && (
-          (command === `relay${rectifierId}on` && activeButton === `relay${rectifierId}on`) ||
-          (command === 'pause' && activeButton === 'pause') ||
-          (command === `relay${rectifierId}off` && activeButton === `relay${rectifierId}off`)
+          (title === 'INICIAR' && activeButton === `relay${rectifierId}on`) ||
+          (title === 'PAUSAR' && activeButton === 'pause') ||
+          (title === 'DETENER' && activeButton === `relay${rectifierId}off`)
         ) ? styles.activeButton : null,
         (!isControlButton && activeButton !== `relay${rectifierId}on`) ? styles.disabledButton : null,
       ]}
@@ -104,11 +125,11 @@ const RectifierScreen = ({ route, navigation }) => {
           );
           return;
         }
-        if (command === `relay${rectifierId}off`) {
+        if (title === 'DETENER') {
           handlePrepare();
-        } else if (command === 'pause') {
+        } else if (title === 'PAUSAR') {
           handlePause();
-        } else if (command === `relay${rectifierId}on`) {
+        } else if (title === 'INICIAR') {
           if (timer === 0) {
             Alert.alert(
               "Información incompleta",
@@ -118,8 +139,8 @@ const RectifierScreen = ({ route, navigation }) => {
             return;
           }
           handleInitiate();
-        } else if (activeButton === `relay${rectifierId}on` && (command === `R${rectifierId}UP` || command === `R${rectifierId}DOWN`)) {
-          handleAmpChange(command);
+        } else if (activeButton === `relay${rectifierId}on` && (commandOrFunction === `R${rectifierId}UP` || commandOrFunction === `R${rectifierId}DOWN`)) {
+          handleAmpChange(commandOrFunction);
         }
       }}
     >
@@ -190,6 +211,21 @@ const RectifierScreen = ({ route, navigation }) => {
           </View>
         </View>
       </View>
+      
+      <Modal
+        transparent={true}
+        animationType="fade"
+        visible={isLoading}
+        onRequestClose={() => {}}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContent}>
+            <ActivityIndicator size="large" color="#0000ff" />
+            <Text style={styles.modalText}>Reduciendo toques...</Text>
+            <Text style={styles.modalText}>{`Progreso: ${Math.round(loadingProgress * 100)}%`}</Text>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };

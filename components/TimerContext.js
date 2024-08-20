@@ -73,6 +73,32 @@ export const TimerProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, [activeTimers, amperageCounts, amperageReductionSchedule]);
 
+  const handleStopWithGradualReduction = useCallback(async (rectifierId, progressCallback) => {
+    const currentCount = amperageCounts[rectifierId] || 0;
+    
+    for (let i = currentCount; i >= 0; i--) {
+      setAmperageCounts(prev => ({
+        ...prev,
+        [rectifierId]: i
+      }));
+      
+      if (i > 0) {
+        await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay between each reduction
+        handleCommandWithRetry(`R${rectifierId}DOWN`, rectifierId, true);
+      }
+      
+      // Update progress
+      if (progressCallback) {
+        progressCallback((currentCount - i) / currentCount);
+      }
+    }
+    
+    // After reduction is complete, stop the timer and update states
+    stopTimer(rectifierId);
+    setActiveStates(prev => ({ ...prev, [rectifierId]: `relay${rectifierId}off` }));
+    handleCommandWithRetry(`relay${rectifierId}off`, rectifierId, false);
+  }, [amperageCounts, handleCommandWithRetry, stopTimer, setActiveStates]);
+
   const handleAmperageReduction = (rectifierId, remainingTime) => {
     const currentCount = amperageCounts[rectifierId] || 0;
     const schedule = amperageReductionSchedule[rectifierId];
@@ -241,7 +267,8 @@ export const TimerProvider = ({ children }) => {
     setDocumentNumber,
     resetOrderNumber,
     amperageCounts,
-    updateAmperageCount
+    updateAmperageCount,
+    handleStopWithGradualReduction
   };
 
   return (
