@@ -5,7 +5,7 @@ import { AlarmContext } from '../components/AlarmContext';
 import styles from '../styles/RectifierScreenStyles';
 
 const RectifierScreen = ({ route, navigation }) => {
-  const { rectifierId, clientData } = route.params;
+  const { rectifierId } = route.params;
   const { 
     timers, 
     startTimer, 
@@ -14,7 +14,6 @@ const RectifierScreen = ({ route, navigation }) => {
     activeStates, 
     setActiveButton, 
     handleCommandWithRetry,
-    orderNumbers,
     amperageCounts,
     updateAmperageCount,
     handleStopWithGradualReduction,
