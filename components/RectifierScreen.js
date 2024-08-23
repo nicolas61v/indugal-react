@@ -174,26 +174,33 @@ const RectifierScreen = ({ route, navigation }) => {
         <View style={styles.contentContainer}>
           <View style={styles.controlsRow}>
             <View style={styles.timerContainer}>
-              <TouchableOpacity
-                style={styles.adjustButton}
-                onPress={() => adjustTimer(5)}>
-                <Text style={styles.adjustButtonText}>+5 Min</Text>
-              </TouchableOpacity>
-              <View style={styles.timerBox}>
-                <Text style={styles.timerText}>{formatTime(timer)}</Text>
+              <Text style={styles.sectionTitle}>TIEMPO</Text>
+              <View style={styles.timerControls}>
+                <TouchableOpacity
+                  style={styles.adjustButton}
+                  onPress={() => adjustTimer(5)}>
+                  <Text style={styles.adjustButtonText}>+5 Min</Text>
+                </TouchableOpacity>
+                <View style={styles.timerBox}>
+                  <Text style={styles.timerText}>{formatTime(timer)}</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.adjustButton}
+                  onPress={() => adjustTimer(-5)}
+                >
+                  <Text style={styles.adjustButtonText}>-5 Min</Text>
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={styles.adjustButton}
-                onPress={() => adjustTimer(-5)}
-              >
-                <Text style={styles.adjustButtonText}>-5 Min</Text>
-              </TouchableOpacity>
             </View>
           </View>
-          <View style={styles.separatorBar} />
-          <View style={styles.buttonRow}>
-            {renderButton('▼', `R${rectifierId}DOWN`, false)}
-            {renderButton('▲', `R${rectifierId}UP`, false)}
+          <View style={styles.controlsRow}>
+            <View style={styles.amperageContainer}>
+              <Text style={styles.sectionTitle}>AMPERAJE</Text>
+              <View style={styles.amperageControls}>
+                {renderButton('▼ BAJAR', `R${rectifierId}DOWN`, false)}
+                {renderButton('▲ SUBIR', `R${rectifierId}UP`, false)}
+              </View>
+            </View>
           </View>
           <View style={styles.buttonRow}>
             {renderButton('INICIAR', `relay${rectifierId}on`, true)}

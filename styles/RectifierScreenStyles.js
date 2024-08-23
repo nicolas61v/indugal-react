@@ -74,8 +74,28 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   timerContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    paddingHorizontal: 20,
+    paddingTop: 5,
+    paddingBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 3,
+    width: '100%',
+  },
+  timerControls: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 2,
+  },
+  amperageContainer: {
     backgroundColor: '#ffffff',
     borderRadius: 10,
     padding: 10,
@@ -87,6 +107,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
     elevation: 3,
+    width: '100%',
+  },
+  amperageControls: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
   },
   adjustButton: {
     backgroundColor: '#3b82f6',
@@ -199,6 +225,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 10,
   },
+    sectionTitle: {
+      fontSize: 20, // Ajusta el tamaño según tus necesidades
+      fontWeight: 'bold',
+      color: '#000', // Ajusta el color según tus necesidades
+      marginTop: 2,
+      marginBottom: 5,
+      textAlign: 'center',
+    },
 });
 
 export default styles;
