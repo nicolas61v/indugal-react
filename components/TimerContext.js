@@ -49,28 +49,7 @@ export const TimerProvider = ({ children }) => {
             }
 
             if (updatedTimers[rectifierId] === 0) {
-              handleCommandWithRetry(`relay${rectifierId}off`, rectifierId, false);
-              setActiveStates(prev => ({ ...prev, [rectifierId]: `relay${rectifierId}off` }));
-              setActiveTimers(prev => {
-                const newActiveTimers = { ...prev };
-                delete newActiveTimers[rectifierId];
-                return newActiveTimers;
-              });
-              setAmperageCounts(prev => {
-                const newCounts = { ...prev };
-                delete newCounts[rectifierId];
-                return newCounts;
-              });
-              setAmperageReductionSchedule(prev => {
-                const newSchedule = { ...prev };
-                delete newSchedule[rectifierId];
-                return newSchedule;
-              });
-              setAlarmTriggers(prev => {
-                const newTriggers = { ...prev };
-                delete newTriggers[rectifierId];
-                return newTriggers;
-              });
+              handleTimerCompletion(rectifierId);
             }
           }
         });
@@ -87,6 +66,31 @@ export const TimerProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, [activeTimers, amperageCounts, amperageReductionSchedule]);
 
+  const handleTimerCompletion = useCallback((rectifierId) => {
+    handleCommandWithRetry(`relay${rectifierId}off`, rectifierId, false);
+    setActiveStates(prev => ({ ...prev, [rectifierId]: `relay${rectifierId}off` }));
+    setActiveTimers(prev => {
+      const newActiveTimers = { ...prev };
+      delete newActiveTimers[rectifierId];
+      return newActiveTimers;
+    });
+    setAmperageCounts(prev => {
+      const newCounts = { ...prev };
+      delete newCounts[rectifierId];
+      return newCounts;
+    });
+    setAmperageReductionSchedule(prev => {
+      const newSchedule = { ...prev };
+      delete newSchedule[rectifierId];
+      return newSchedule;
+    });
+    setAlarmTriggers(prev => {
+      const newTriggers = { ...prev };
+      delete newTriggers[rectifierId];
+      return newTriggers;
+    });
+  }, []);
+
   useEffect(() => {
     Object.entries(alarmTriggers).forEach(([rectifierId, shouldTrigger]) => {
       if (shouldTrigger) {
@@ -96,7 +100,7 @@ export const TimerProvider = ({ children }) => {
     });
   }, [alarmTriggers, startAlarm]);
 
-  const handleAmperageReduction = (rectifierId, remainingTime) => {
+  const handleAmperageReduction = useCallback((rectifierId, remainingTime) => {
     const currentCount = amperageCounts[rectifierId] || 0;
     const schedule = amperageReductionSchedule[rectifierId];
 
@@ -118,7 +122,7 @@ export const TimerProvider = ({ children }) => {
         [rectifierId]: prev[rectifierId].slice(1)
       }));
     }
-  };
+  }, [amperageCounts, amperageReductionSchedule]);
 
   const loadData = async () => {
     try {
@@ -127,11 +131,28 @@ export const TimerProvider = ({ children }) => {
       const storedOrderNumbers = await AsyncStorage.getItem('orderNumbers');
       const storedDocumentNumbers = await AsyncStorage.getItem('documentNumbers');
       const storedAmperageCounts = await AsyncStorage.getItem('amperageCounts');
+      
       if (storedTimers) setTimers(JSON.parse(storedTimers));
-      if (storedStates) setActiveStates(JSON.parse(storedStates));
+      if (storedStates) {
+        const parsedStates = JSON.parse(storedStates);
+        Object.keys(parsedStates).forEach(key => {
+          if (parsedStates[key] === `relay${key}off`) {
+            delete parsedStates[key];
+          }
+        });
+        setActiveStates(parsedStates);
+      }
       if (storedOrderNumbers) setOrderNumbers(JSON.parse(storedOrderNumbers));
       if (storedDocumentNumbers) setDocumentNumbers(JSON.parse(storedDocumentNumbers));
-      if (storedAmperageCounts) setAmperageCounts(JSON.parse(storedAmperageCounts));
+      if (storedAmperageCounts) {
+        const parsedCounts = JSON.parse(storedAmperageCounts);
+        Object.keys(parsedCounts).forEach(key => {
+          if (activeStates[key] === `relay${key}off`) {
+            delete parsedCounts[key];
+          }
+        });
+        setAmperageCounts(parsedCounts);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     }
@@ -261,22 +282,41 @@ export const TimerProvider = ({ children }) => {
       }));
       
       if (i > 0) {
-        await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay between each reduction
+        await new Promise(resolve => setTimeout(resolve, 500));
         handleCommandWithRetry(`R${rectifierId}DOWN`, rectifierId, true);
       }
       
-      // Update progress
       if (progressCallback) {
         progressCallback((currentCount - i) / currentCount);
       }
     }
     
-    // After reduction is complete, stop the timer, reset it, and update states
     stopTimer(rectifierId);
-    setTimers(prev => ({ ...prev, [rectifierId]: 0 }));  // Reset timer to 0
-    setActiveStates(prev => ({ ...prev, [rectifierId]: null }));  // Reset active state
+    setTimers(prev => ({ ...prev, [rectifierId]: 0 }));
+    setActiveStates(prev => ({ ...prev, [rectifierId]: `relay${rectifierId}off` }));
+    setAmperageCounts(prev => {
+      const newCounts = { ...prev };
+      delete newCounts[rectifierId];
+      return newCounts;
+    });
+    setAmperageReductionSchedule(prev => {
+      const newSchedule = { ...prev };
+      delete newSchedule[rectifierId];
+      return newSchedule;
+    });
+    
+    // No borramos orderNumbers ni documentNumbers aquí
+    
+    saveData(
+      { ...timers, [rectifierId]: 0 },
+      { ...activeStates, [rectifierId]: `relay${rectifierId}off` },
+      orderNumbers,
+      documentNumbers,
+      { ...amperageCounts, [rectifierId]: 0 }
+    );
+
     handleCommandWithRetry(`relay${rectifierId}off`, rectifierId, false);
-  }, [amperageCounts, handleCommandWithRetry, stopTimer, setActiveStates, setTimers, stopAlarm]);
+  }, [amperageCounts, handleCommandWithRetry, stopTimer, setActiveStates, setTimers, stopAlarm, saveData, timers, activeStates, orderNumbers, documentNumbers]);
 
   const contextValue = {
     timers,
