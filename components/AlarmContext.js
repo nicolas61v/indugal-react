@@ -3,7 +3,7 @@ import { Audio } from 'expo-av';
 
 export const AlarmContext = createContext();
 
-const ESP32_IP = 'http://10.10.0.31'; // IP address from TimerContext
+const ESP32_IP = 'http://10.10.0.247'; // IP address from TimerContext
 
 export const AlarmProvider = ({ children }) => {
   const [activeAlarms, setActiveAlarms] = useState({});

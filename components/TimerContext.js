@@ -153,6 +153,16 @@ export const TimerProvider = ({ children }) => {
         });
         setAmperageCounts(parsedCounts);
       }
+
+      // Verificar si hay procesos de detención incompletos
+      const keys = await AsyncStorage.getAllKeys();
+      const stoppingKeys = keys.filter(key => key.startsWith('stopping_'));
+      
+      for (const key of stoppingKeys) {
+        const rectifierId = key.split('_')[1];
+        // Completar el proceso de detención para este rectificador
+        await handleStopWithGradualReduction(rectifierId);
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     }
@@ -173,7 +183,7 @@ export const TimerProvider = ({ children }) => {
   const handleCommandWithRetry = useCallback((command, rectifierId, isLastSevenMinutes) => {
     const retryOperation = async (retryCount = 0) => {
       try {
-        const response = await fetch(`http://10.10.0.31/${command}`, { timeout: 3000 });
+        const response = await fetch(`http://10.10.0.247/${command}`, { timeout: 3000 });
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
@@ -272,6 +282,9 @@ export const TimerProvider = ({ children }) => {
   }, [timers, activeStates, orderNumbers, documentNumbers, saveData]);
 
   const handleStopWithGradualReduction = useCallback(async (rectifierId, progressCallback) => {
+    // Guardar inmediatamente el estado crítico
+    await AsyncStorage.setItem(`stopping_${rectifierId}`, 'true');
+    
     stopAlarm(rectifierId);
     const currentCount = amperageCounts[rectifierId] || 0;
     
@@ -289,6 +302,17 @@ export const TimerProvider = ({ children }) => {
       if (progressCallback) {
         progressCallback((currentCount - i) / currentCount);
       }
+      
+      // Guardar el progreso cada 5 pasos
+      if (i % 5 === 0) {
+        await saveData(
+          { ...timers, [rectifierId]: 0 },
+          { ...activeStates, [rectifierId]: `relay${rectifierId}off` },
+          orderNumbers,
+          documentNumbers,
+          { ...amperageCounts, [rectifierId]: i }
+        );
+      }
     }
     
     stopTimer(rectifierId);
@@ -305,9 +329,7 @@ export const TimerProvider = ({ children }) => {
       return newSchedule;
     });
     
-    // No borramos orderNumbers ni documentNumbers aquí
-    
-    saveData(
+    await saveData(
       { ...timers, [rectifierId]: 0 },
       { ...activeStates, [rectifierId]: `relay${rectifierId}off` },
       orderNumbers,
@@ -316,6 +338,9 @@ export const TimerProvider = ({ children }) => {
     );
 
     handleCommandWithRetry(`relay${rectifierId}off`, rectifierId, false);
+    
+    // Eliminar el flag de "en proceso de detención"
+    await AsyncStorage.removeItem(`stopping_${rectifierId}`);
   }, [amperageCounts, handleCommandWithRetry, stopTimer, setActiveStates, setTimers, stopAlarm, saveData, timers, activeStates, orderNumbers, documentNumbers]);
 
   const contextValue = {
@@ -342,3 +367,5 @@ export const TimerProvider = ({ children }) => {
     </TimerContext.Provider>
   );
 };
+
+export default TimerProvider;

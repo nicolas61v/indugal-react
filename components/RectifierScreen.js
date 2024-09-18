@@ -90,7 +90,7 @@ const RectifierScreen = ({ route, navigation }) => {
     lastAmpChangeTime.current = now;
 
     try {
-      const response = await fetch(`http://10.10.0.31/${command}`);
+      const response = await fetch(`http://10.10.0.247/${command}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
