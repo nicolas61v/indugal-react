@@ -110,7 +110,6 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.container}>
         <View style={styles.topRectangle} />
         <Image source={require('../assets/indugalLogo.png')} style={styles.logo} />
-        <View style={styles.squareBox} />
         <View style={styles.buttonContainer}>
           <ScrollView contentContainerStyle={styles.buttonColumn}>
             {renderButton('BAÑO 1', 1)}

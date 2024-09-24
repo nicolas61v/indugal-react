@@ -166,7 +166,6 @@ const RectifierScreen = ({ route, navigation }) => {
     <ScrollView contentContainerStyle={styles.scrollViewContainer}>
       <View style={styles.container}>
         <Image source={require('../assets/indugalLogo.png')} style={styles.logo} />
-        <View style={styles.squareBox} />
         <View style={styles.infoContainer}>
           <Text style={styles.title}>BAÑO {rectifierId}</Text>
           <Text style={styles.amperageCount}>Toques: {amperageCount}</Text>

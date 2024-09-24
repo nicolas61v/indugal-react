@@ -19,21 +19,6 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     marginBottom: 20,
   },
-  squareBox: {
-    width: '100%',
-    height: screenHeight * 0.25,
-    backgroundColor: '#303F9F',
-    marginBottom: 20,
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.23,
-    shadowRadius: 2.62,
-    elevation: 4,
-  },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',

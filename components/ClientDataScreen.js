@@ -137,7 +137,6 @@ const ClientDataScreen = ({ navigation, route }) => {
       <ScrollView contentContainerStyle={styles.scrollViewContainer}>
         <View style={styles.container}>
           <Image source={require('../assets/indugalLogo.png')} style={styles.logo} />
-          <View style={styles.squareBox} />
           <View style={styles.infoContainer}>
             <Text style={styles.title}>Datos del Cliente y Proceso</Text>
           </View>
