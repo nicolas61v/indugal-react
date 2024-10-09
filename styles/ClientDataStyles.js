@@ -194,6 +194,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     paddingVertical: 10,
   },
+  downloadButton: {
+    backgroundColor: '#4CAF50', // Green color for download button
+  },
 });
 
 export default styles;

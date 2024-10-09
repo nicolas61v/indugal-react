@@ -1,6 +1,5 @@
 {
   "expo": {
-    
     "name": "indugal",
     "slug": "indugal",
     "version": "1.0.0",
@@ -21,7 +20,11 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.indugalreact.indugalreact",
-      "versionCode": 1
+      "versionCode": 1,
+      "permissions": [
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -30,6 +33,20 @@
       "eas": {
         "projectId": "39b3ab15-015c-4aaa-bf79-edb150164834"
       }
-    }
+    },
+    "plugins": [
+      [
+        "expo-file-system",
+        {
+          "fileSystemSchemes": ["file", "content"]
+        }
+      ],
+      [
+        "expo-document-picker",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ]
+    ]
   }
 }
