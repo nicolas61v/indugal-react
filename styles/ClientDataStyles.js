@@ -195,7 +195,10 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   downloadButton: {
-    backgroundColor: '#4CAF50', // Green color for download button
+    backgroundColor: '#4CAF50',
+    marginTop: 10,
+    paddingHorizontal: 30,
+    paddingVertical: 10, // Green color for download button
   },
 });
 
