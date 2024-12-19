@@ -185,7 +185,7 @@ export const TimerProvider = ({ children }) => {
     const retryOperation = async (retryCount = 0) => {
       try {
         //aqui cambiamos la IP por la de nuestro esp32
-        const response = await fetch(`http://10.10.0.247/${command}`, { timeout: 3000 });
+        const response = await fetch(`http://10.10.0.106/${command}`, { timeout: 3000 });
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
