@@ -1,3 +1,4 @@
+//linea 186 se cambio la ip por la de nuestro esp32
 import React, { createContext, useState, useEffect, useCallback, useRef, useContext } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AlarmContext } from './AlarmContext';
@@ -183,6 +184,7 @@ export const TimerProvider = ({ children }) => {
   const handleCommandWithRetry = useCallback((command, rectifierId, isLastSevenMinutes) => {
     const retryOperation = async (retryCount = 0) => {
       try {
+        //aqui cambiamos la IP por la de nuestro esp32
         const response = await fetch(`http://10.10.0.247/${command}`, { timeout: 3000 });
         if (!response.ok) {
           throw new Error('Network response was not ok');
