@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(/C:\\Users\\vasqu\\OneDrive\\Documentos\\indugal-react/**)",
+      "Bash(npx expo:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
