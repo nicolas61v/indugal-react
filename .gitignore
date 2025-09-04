@@ -18,6 +18,8 @@ web-build/
 
 # Metro
 .metro-health-check*
+package-lock.json
+
 
 # debug
 npm-debug.*
